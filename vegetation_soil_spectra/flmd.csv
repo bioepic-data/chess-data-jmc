@@ -1,0 +1,19 @@
+file_name,file_description,standard,header_rows,column_or_row_name_position
+asd_jump_correction.py,python script file (.py file extension) for correcting ASD radiance measurements,N/A,-9999,-9999
+asdprocessor.py,python script file (.py file extension) for processing ASD radiance measurements to generate reflectance spectra,N/A,-9999,-9999
+asdreader.py,python script file (.py file extension) for reading ASD radiance files,N/A,-9999,-9999
+CHESS_processing.ipynb,jupyter notebook (.ipynb file extension) illustrating how the CHESS radiance measurements (.asd file format) were processed to generate reflectance spectra in .csv file format,N/A,-9999,-9999
+asd_temp_corr_coeffs.mat,MAT file (.mat file extension) used by the asd_jump_correction.py script to correct the ASD radiance measurements,N/A,-9999,-9999
+spectralon_rfl.txt,text file (.txt fiel extension) containing relfectance coefficients for the Spectralon panels. This file is required to process the ASD radiance measurements and generate reflectance spectra.,N/A,-9999,-9999
+ASDfieldspec_protocol.pdf,PDF (.pdf file extension) describing protocols followed to acquire ASD radiance measurements,N/A,-9999,-9999
+metadata_cp.csv,CSV file format (no geolocation),ESS-DIVE CSV v1,1,1
+metadata_cp.geojson,GEOJSON file format (includes geolocation for each spectra) for contact probe (cp) measurement type,N/A,-9999,-9999
+*.asd,Radiance spectra provided in ASD file format (.asd file extension) for contact probe (cp) measurement type,N/A,-9999,-9999
+*_rfl.csv,Reflectance spectra provided in CSV file format,ESS-DIVE CSV v1,1,1
+metadata_lc.csv,CSV file format (no geolocation) for leaf clip (lc) measurement type,ESS-DIVE CSV v1,1,1
+metadata_lc.geojson,GEOJSON file format (includes geolocation for each spectra) for leaf clip (lc) measurement type,N/A,-9999,-9999
+*.jpeg,Photographs of sites and endmembers corresponding to ASD measurements. Provided in .JPEG file format.,N/A,-9999,-9999
+metadata_prx.csv,CSV file format (no geolocation) for proximal/palm grip (prx) measurement type,ESS-DIVE CSV v1,1,1
+metadata_prx.geojson,GEOJSON file format (includes geolocation for each spectra) for proximal/palm grip (prx) measurement type,N/A,-9999,-9999
+flmd.csv,File-level metadata associated with dataset describing files contained within dataset.,ESS-DIVE FLMD v1,-9999,-9999
+dd.csv,Data dictionary defining column headers and other terms contained within data files across the dataset.,ESS-DIVE FLMD v1,-9999,-9999

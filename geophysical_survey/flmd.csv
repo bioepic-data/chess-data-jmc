@@ -1,0 +1,9 @@
+File_Name,File_Description,Standard,Contact,Date_Start,Date_End,Missing_Value_Codes,Data_Orientation
+flmd.csv,File-level metadata associated with dataset describing files contained within dataset.,ESS-DIVE FLMD v1,Nicola Falco,2018-06-14,2018-06-28,N/A; -9999,horizontal
+dd.csv,Data dictionary defining column headers and other terms contained within data files across the dataset.,ESS-DIVE FLMD v1,Nicola Falco,2018-06-14,2018-06-28,N/A; -9999,horizontal
+NEON_2018_EMI_survey.shp,Point-based shape-file of the EMI survey ,N/A,Nicola Falco,2018-06-14,2018-06-28,N/A,N/A
+NEON_2018_EMI_survey.shx,"Companion file that, along with the main .SHP file. SHX is the geometry index.",N/A,Nicola Falco,2018-06-14,2018-06-28,N/A,N/A
+NEON_2018_EMI_survey.cpg,"Companion file that, along with the main .SHP file .CPG specifies text encoding, allowing software to interpret location, shape, and associated info correctly. ",N/A,Nicola Falco,2018-06-14,2018-06-28,N/A,N/A
+NEON_2018_EMI_survey.dbf,"Companion file that, along with the main .SHP file. DBF holds feature attributes.",N/A,Nicola Falco,2018-06-14,2018-06-28,N/A,N/A
+NEON_2018_EMI_survey.prj,"Companion file that, along with the main .SHP file. PRJ defines the coordinate system.",N/A,Nicola Falco,2018-06-14,2018-06-28,N/A,N/A
+NEON_plot_TDR.csv,"NEON plot data of Time Domain Reflectometry, including soil texture data.",ESS-DIVE CSV v1,Nicola Falco,2018-06-14,2018-06-28,N/A; -9999,horizontal

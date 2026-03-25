@@ -1,0 +1,25 @@
+Column_or_Row_Name,BERVO Combination,BERVO Term,Unit,Definition,Data_Type
+File_Name,unnecessary?,,N/A,Name of the files in the dataset/data package.,text
+File_Description,unnecessary?,,N/A,A brief description of the files in the dataset/data package.,text
+Standard,unnecessary?,,N/A,Standard applied to the data file.,text
+Contact,unnecessary?,,N/A,Contact for the associated file.,text
+Date_Start,"Date, Context=Start",BERVO:8000239,YYYY-MM-DD,Start of data contained within file.,date
+Date_End,"Date, Context=End",BERVO:8000239,YYYY-MM-DD,End of data contained within file.,date
+Missing_Value_Codes,unnecessary?,,N/A,Missing value codes used within dataset.,text
+Data_Orientation,unnecessary?,,N/A,Orientation of the field name row or column.,text
+Column_or_Row_Name,unnecessary?,,N/A,Column or row name contained within a file.,text
+Unit,unnecessary?,,N/A,Unit of column or row name within file.,text
+Definition,unnecessary?,,N/A,Definition of column or row name.,text
+Data_Type,unnecessary?,,N/A,Type of data that the column or row contains.,text
+SampleSiteCode,"Identifier, Context = Site",BERVO:8000528,N/A,A unique identification code associated with a surveyed plot.,text
+Easting,"Easting, projected coordinate system = UTM Zone 13N",BERVO:8000440,m,"Grid coordinates in the Universal Transverse Mercator system, measuring distances in meters from an origin within a specific 6-degree zone. Eastings count meters eastward.",numeric
+Northing,"Northing, projected coordinate system = UTM Zone 13N",BERVO:8000441,m,"Grid coordinates in the Universal Transverse Mercator system, measuring distances in meters from the central meridian of a UTM zone. Northings count meters northward from the equator.",numeric
+VegetationType,"Community type",BERVO:8000404,N/A,"Plot classification based on the dominan vegetation land-cover (e.g., meadow, shrub, or tree)",text
+Site,Region,BERVO:8000519,N/A,"A site is a small region of a domain defined by its topography. Several sites were identified based on elevation, aspect, and slope gradients. For each site, several plots were surveyed.",text
+Collection Date,"Date, Context=Collection",BERVO:8000239,YYYY-MM-DD,Date of data collection,date
+VWC_1,"Volumetric water content, Depth = 20 (cm), replicate = 1",BERVO:0001743,%,"Volumetric water content, first reading measured at 20 cm depth within a plot.",numeric
+VWC _2,"Volumetric water content, Depth = 20 (cm), replicate = 2",BERVO:0001743,%,"Volumetric water content, second reading measured at 20 cm depth within a plot.",numeric
+avg_VWC,"Volumetric water content, Depth = 20 (cm), statistic = average",BERVO:0001743,%,Averaged volumetric water content measured at 20 cm depth within a plot.,numeric
+Temp_1,"Temperature, Depth = 20 (cm), replicate = 1",BERVO:8000133,Celsius (°C),"Near-surface temperature, first reading measured at 20 cm depth within a plot.",numeric
+Temp_2,"Temperature, Depth = 20 (cm), replicate = 2",BERVO:8000133,Celsius (°C),"Near-surface temperature, second reading measured at 20 cm depth within a plot.",numeric
+avg_Temp,"Temperature, Depth = 20 (cm), statistic = average",BERVO:8000133,Celsius (°C),"Average near-surface temperature, measured at 20 cm depth within a plot.",numeric

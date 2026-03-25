@@ -1,0 +1,142 @@
+column_or_row_name,unit,definition,data_type
+file_name,N/A,Name of the files in the dataset/data package.,text
+file_description,N/A,A brief description of the files in the dataset/data package.,text
+standard,N/A,Standard applied to the data file.,text
+column_or_row_name,N/A,Column or row name contained within a file.,text
+unit,N/A,Unit of column or row name within file.,text
+definition,N/A,Definition of column or row name.,text
+data_type,N/A,Type of data that the column or row contains.,text
+missing_value_code,N/A,Missing value code for a column or row name.,text
+sample name,N/A,"A local identifier or name that for the material sample used for extracting nucleic acids, and subsequent sequencing.",text
+source material identifier,N/A,"A unique identifier assigned to a material sample used for extracting nucleic acids, and subsequent sequencing.",text
+analysis/data type,N/A,Analysis/data type associated with sample.,text
+sample linkage,N/A,Linkage for sample.,text
+broad-scale environmental context,N/A,Report the major environmental system the sample or specimen came from.,text
+local environmental context,N/A,Report the entity or entities which are in the sample or specimens local vicinity and which you believe have significant causal influences on your sample or specimen.,text
+environmental medium,N/A,Report the environmental material(s) immediately surrounding the sample or specimen at the time of sampling.,text
+ecosystem,N/A,Ecosystem name associated with sample.,text
+ecosystem_category,N/A,Category of ecosystem associated with sample.,text
+ecosystem_type,N/A,Type of ecosystem associated with sample.,text
+ecosystem_subtype,N/A,Subtype of ecosystem associated with sample.,text
+specific_ecosystem,N/A,Specific ecosystem associated with sample.,text
+slope aspect,N/A,"The direction a slope faces. While looking down a slope use a compass to record the direction you are facing (direction or degrees); e.g., nw or 315 degrees. ",text
+history/agrochemical additions,N/A,"Addition of fertilizers, pesticides, etc. - amount and time of applications",text
+aluminum saturation/ extreme unusual properties,N/A,Aluminum saturation (esp. For tropical soils),text
+aluminum saturation method/ extreme unusual properties,N/A,Reference or method used in determining Al saturation,text
+mean annual precipitation,N/A,"The average of all annual precipitation values known, or an estimated equivalent value derived by such methods as regional indexes or Isohyetal maps",text
+mean annual temperature,N/A,mean annual temperature,text
+history/crop rotation,N/A,"Whether or not crop is rotated, and if yes, rotation schedule",text
+current land use,N/A,Present state of sample site,text
+current vegetation,N/A,"Vegetation classification from one or more standard classification systems, or agricultural crop",text
+current vegetation method,N/A,Reference or method used in vegetation classification,text
+drainage classification,N/A,Drainage classification from a standard system such as the USDA system,text
+experimental factor,N/A,"Variable aspects of an experiment design that can be used to describe an experiment, or set of experiments, in an increasingly detailed manner.",text
+history/extreme events,N/A,Unusual physical events that may have affected microbial populations,text
+soil_taxonomic/FAO classification,N/A,Soil classification from the FAO World soil distribution from International Soil Reference and Information Centre (ISRIC). ,text
+history/fire,N/A,Historical and/or physical evidence of fire,text
+history/flooding,N/A,Historical and/or physical evidence of flooding,text
+heavy metals/ extreme unusual properties,N/A,Heavy metals present in the sequenced sample and their concentrations,text
+heavy metals method/ extreme unusual properties,N/A,Reference or method used in determining heavy metals,text
+soil horizon method,N/A,Reference or method used in determining soil horizon,text
+link to classification information,N/A,Link to digitized soil maps or other soil classification information,text
+link to climate information,N/A,Link to climate resource,text
+soil_taxonomic/local classification,N/A,Soil classification based on local soil classification system,text
+miscellaneous parameter,N/A,"Any other measurement performed or parameter collected, that is not listed here",text
+soil_taxonomic/local classification method,N/A,Reference or method used in determining the local soil classification,text
+oxygenation status of sample,N/A,Oxygenation status of sample,text
+history/previous land use method,N/A,Reference or method used in determining previous land use and dates,text
+history/previous land use,N/A,Previous land use and dates,text
+profile position,N/A,Cross-sectional position in the hillslope where sample was collected.sample area position in relation to surrounding areas,text
+average seasonal precipitation,N/A,"The average of all seasonal precipitation values known, or an estimated equivalent value derived by such methods as regional indexes or Isohyetal maps",text
+mean seasonal temperature,N/A,Mean seasonal temperature,text
+slope gradient,N/A,Commonly called 'slope'. The angle between ground surface and a horizontal line (in percent). This is the direction that overland water would flow. This measure is usually taken with a hand level meter or clinometer,text
+soil horizon,N/A,Specific layer in the land area which measures parallel to the soil surface and possesses physical characteristics which differ from the layers above and beneath,text
+soil texture measurement,N/A,"The relative proportion of different grain sizes of mineral particles in a soil, as described using a standard system; express as % sand (50 um to 2 mm), silt (2 um to 50 um), and clay (<2 um) with textural name (e.g., silty clay loam) optional",text
+soil texture method,N/A,Reference or method used in determining soil texture,text
+soil type,N/A,Description of the soil type or classification.,text
+soil type method,N/A,Reference or method used in determining soil series name or other lower-level classification,text
+temperature,N/A,Temperature of the sample at the time of sampling,text
+history/tillage,N/A,Note method(s) used for tilling,text
+water content,N/A,Water content measurement,text
+water content method,N/A,Reference or method used in determining the water content of soil,text
+pH method,N/A,Reference or method used in determining pH,text
+microbial biomass,N/A,The part of the organic matter in the soil that constitutes living microorganisms smaller than 5-10 micrometer. ,text
+microbial biomass method,N/A,Microbial biomass method associated with sample.,text
+carbon/nitrogen ratio,N/A,Ratio of amount or concentrations of carbon to nitrogen,text
+organic matter,N/A,Concentration of organic matter,text
+organic nitrogen,N/A,Concentration of organic nitrogen,text
+total carbon,N/A,Total carbon content,text
+total nitrogen content,N/A,Total nitrogen content of the sample,text
+total nitrogen content method,N/A,Reference or method used in determining the total nitrogen,text
+total organic carbon,N/A,Total organic carbon content,text
+total organic carbon method,N/A,Reference or method used in determining total organic carbon,text
+total phosphorus,N/A,"Total phosphorus concentration in the sample, calculated by: total phosphorus = total dissolved phosphorus + particulate phosphorus",text
+phosphate,N/A,Concentration of phosphate,text
+salinity,N/A,The total concentration of all dissolved salts in a liquid or solid sample.,text
+salinity method,N/A,Reference or method used in determining salinity,text
+links to additional analysis,N/A,Link to additional analysis results performed on the sample,text
+growth facility,N/A,"Type of facility where the sampled plant was grown; controlled vocabulary: growth chamber, open top chamber, glasshouse, experimental garden, field.",text
+storage conditions,N/A,Explain how and for how long the soil sample was stored before DNA extraction (fresh/frozen/other),text
+collection date,N/A,"The time of sampling, either as an instance (single point in time) or interval. ",date
+"geographic location (country and/or sea,region)",N/A,The geographical origin of the sample as defined by the country or sea name followed by specific region name.,text
+geographic location (latitude and longitude),N/A,The geographical origin of the sample as defined by latitude and longitude. ,text
+"elevation, meters",meters,"Elevation of the sampling site is its height above a fixed reference point, most commonly the mean sea level. Elevation is mainly used when referring to points on the earth's surface, while altitude is used for points above the surface, such as an aircraft in flight or a spacecraft in orbit",numeric
+sample storage temperature,N/A,"Temperature at which sample was stored, e.g. -80 degree Celsius",text
+composite design/sieving,N/A,Collection design of pooled samples and/or sieve size and amount of sample sieved,text
+"depth, meters",N/A,"The vertical distance below local surface. For sediment or soil samples depth is measured from sediment or soil surface, respectively.",text
+size-fraction lower threshold,N/A,Refers to the mesh/pore size used to pre-filter/pre-sort the sample. Materials smaller than the size threshold are excluded from the sample,text
+size-fraction upper threshold,N/A,Mesh or pore size of the device used to retain the sample. Materials larger than the size threshold are excluded from the sample.,text
+sample material processing,N/A,"A brief description of any processing applied to the sample during or after retrieving the sample from environment, or a link to the relevant protocol(s) performed",text
+biotic regimen,N/A,"Information about treatment(s) involving use of biotic factors, such as bacteria, viruses or fungi",text
+sample collection device,N/A,The device used to collect an environmental sample. ,text
+sample collection method,N/A,The method employed for collecting the sample,text
+air temperature regimen,N/A,"Information about treatment involving an exposure to varying temperatures; should include the temperature, treatment regimen including how many times the treatment was repeated, how long each treatment lasted, and the start and end time of the entire treatment; can include different temperature regimens",text
+chemical administration,N/A,"List of chemical compounds administered to the host or site where sampling occurred, and when (e.g. Antibiotics, n fertilizer, air filter); can include multiple compounds. ",text
+amount or size of sample collected,N/A,"The total amount or size (volume (ml), mass (g) or area (m2) ) of sample collected",text
+climate environment,N/A,"Treatment involving an exposure to a particular climate; treatment regimen including how many times the treatment was repeated, how long each treatment lasted, and the start and end time of the entire treatment; can include multiple climates",text
+gaseous environment,N/A,"Use of conditions with differing gaseous environments; should include the name of gaseous compound, amount administered, treatment duration, interval and total experimental duration; can include multiple gaseous environment regimens",text
+humidity regimen,N/A,"Information about treatment involving an exposure to varying degree of humidity; information about treatment involving use of growth hormones; should include amount of humidity administered, treatment regimen including how many times the treatment was repeated, how long each treatment lasted, and the start and end time of the entire treatment; can include multiple regimens",text
+observed biotic relationship,N/A,"Description of relationship(s) between the subject organism and other organism(s) it is associated with. E.g., parasite on species X; mutualist with species Y. The target organism is the subject of the relationship, and the other organism(s) is the object",text
+light regimen,N/A,"Information about treatment(s) involving exposure to light, including both light intensity and quality",text
+watering regimen,N/A,"Information about treatment involving an exposure to watering frequencies, treatment regimen including how many times the treatment was repeated, how long each treatment lasted, and the start and end time of the entire treatment; can include multiple regimens",text
+pH,N/A,"pH measurement of the sample, or liquid portion of sample, or aqueous phase of the fluid",numeric
+"collection time, GMT",N/A,"collection time, GMT associated with sample.",text
+incubation collection date,N/A,incubation collection date associated with sample.,text
+"incubation collection time, GMT",N/A,"incubation collection time, GMT associated with sample.",text
+incubation start date,N/A,incubation start date associated with sample.,text
+"incubation start time, GMT",N/A,"incubation start time, GMT associated with sample.",text
+filter method,N/A,filter method associated with sample.,text
+experimental factor- other,N/A,experimental factor- other associated with sample.,text
+non-microbial biomass,N/A,non-microbial biomass associated with sample.,text
+non-microbial biomass method,N/A,Reference or method used in determining non-microbial biomass,text
+organic nitrogen method,N/A,Reference or method used in determining organic nitrogen,text
+other treatments,N/A,other treatments associated with sample.,text
+isotope exposure/addition,N/A,isotope exposure/addition associated with sample.,text
+lime buffer capacity (at 30 minutes),N/A,lime buffer capacity (at 30 minutes) associated with sample.,text
+lime buffer capacity (after 5 day incubation),N/A,lime buffer capacity (after 5 day incubation) associated with sample.,text
+manganese,N/A,manganese associated with sample.,text
+microbial biomass carbon method,N/A,Reference or method used in determining microbial biomass carbon,text
+microbial biomass nitrogen method,N/A,Reference or method used in determining microbial biomass nitrogen,text
+microbial biomass carbon,N/A,microbial biomass carbon associated with sample.,text
+microbial biomass nitrogen,N/A,microbial biomass nitrogen associated with sample.,text
+zinc,N/A,zinc associated with sample.,text
+ammonium nitrogen,N/A,ammonium nitrogen associated with sample.,text
+nitrate_nitrogen,N/A,nitrate_nitrogen associated with sample.,text
+nitrite_nitrogen,N/A,nitrite_nitrogen associated with sample.,text
+bulk electrical conductivity,N/A,bulk electrical conductivity associated with sample.,text
+infiltrations,N/A,infiltrations associated with sample.,text
+Sample_Collection_Date,YYYY-MM-DD,Date of sample collection.,date
+IGSN,N/A,International Generic Sample Number (IGSN) for associated source sample.,text
+Sample Name,N/A,Name of associated sample.,text
+Release Date,YYYY-MM-DD,Date when sample metadata should be publicly accessible and searchable.,text
+Collection method,N/A,Method of collection of sample.,text
+Latitude,N/A,Latitude of the location where the sample was collected.,numeric
+Longitude,N/A,Longitude of the location where the sample was collected.,numeric
+Navigation type,N/A,Type of geolocation instrument used to obtain geographic coordinates.,text
+Primary physiographic feature,N/A,Description of the primary physiographic feature of which the sample was collected.,text
+Field program/cruise,N/A,Associated project of which the sample was collected for.,text
+Collector/Chief Scientist,N/A,Name of the person(s) who collected the sample.,text
+Collection date,N/A,Date of collection of the sample collected.,date
+Depth in core max,N/A,"Depth of core, maximum.",numeric
+Depth scale,N/A,Scale associated with depth of sample collection.,text
+Country,N/A,Country associated of sample collected.,text

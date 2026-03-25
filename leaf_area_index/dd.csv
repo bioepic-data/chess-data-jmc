@@ -1,0 +1,92 @@
+column_or_row_name,unit,definition,data_type,missing_value_code
+file_name,N/A,Name of the files in the dataset/data package.,text,
+file_description,N/A,A brief description of the files in the dataset/data package.,text,
+standard,N/A,Standard applied to the data file.,text,
+file_version,N/A,Version of the file described within file level metadata file. ,text,
+data_orientation,N/A,Description of how the data are organized within the data file.,text,
+header_rows,N/A,Total number of header rows before the start of the first data row.,numeric,
+column_or_row_name_position,N/A,Row or column number that contains the header names.,numeric,
+column_or_row_name,N/A,Column or row name contained within a file.,text,
+unit,N/A,Unit of column or row name within file.,text,
+definition,N/A,Definition of column or row name.,text,
+column_or_row_long_name,N/A,Longer human-readable column or row name.,text,
+data_type,N/A,Type of data that the column or row contains.,text,
+missing_value_code,N/A,Missing value code used within a column.,text,
+Site_Number,N/A,"Unique identifier for each sample, corresponding to the number of the metal tag affixed to a stake at the corner of each plot.",text,NA
+Location_Type,N/A,Broad land cover classification for the measurement site. meadow=site with predominantly herbaceous vegetation or site with woody shrubs less than 0.5 m tall. shrub=woody plants with canopies greater than 1 m^2 and up to 3 m tall. tree=woody plants more than 3 m tall and belonging to a pre-defined species list. understory=predominantly herbaceous ground cover under quaking aspen (Populus tremuloides) forest canopy measured in an ancillary aspen understory project. overstory=quaking aspen (P. tremuloides) trees more than 3 m tall measured in an ancillary aspen understory project.,text,NA
+Sampling_Area,N/A,Two-letter code identifying the sampling area within the study region.,text,NA
+Collection_Date,YYYY-MM-DD,Calendar date of field data collection following ISO 8601 format: YYYY-MM-DD.,date,NA
+Light_Conditions,N/A,"Description of sky and illumination conditions during measurement (e.g., clear and sunny, cloudy, hazy).",text,NA
+Requires_K,N/A,Whether a scattering correction (K record) is required for LAI computation. TRUE under sunny or hazy conditions; FALSE under fully cloudy or overcast skies where diffuse light predominates.,text,NA
+Associated_K,N/A,Site_Number of the site whose K record is used for scattering correction. NA when Requires_K is FALSE. Multiple sites may share a single K record if measured under similar open-sky conditions.,text,NA
+Contains_K,N/A,"Whether the K (scattering correction) measurements were physically collected at this site (TRUE) or at the site identified in Associated_K (FALSE). When TRUE, the K records are contained in the same file as the A and B records.",text,NA
+K_Record_Azimuth,degrees,"Comma-separated list of azimuths (degrees) toward which the K record sensor view cap was oriented during scattering correction measurements. Meadow sites typically use four azimuths (315, 225, 135, 45); shrub sites typically use a single azimuth (0). NA when Requires_K is FALSE.",text,NA
+Asky_FOV,degrees,Field-of-view angle of the sensor cap used during A and B record collection.,numeric,NA
+Widesky_FOV,degrees,Wide-sky field-of-view angle used for the full hemispherical reference measurement.,numeric,NA
+Latitude,decimal degrees,"Latitude of the measurement site in decimal degrees, WGS 84 datum. NOTE: These values represent measurement site centroids. They are used for scattering correction computations and are not intended for precise geospatial analysis. For accurate geospatial information, please use the geojson files in the associated package 'CHESS 2025: Location data for field observations and sampling.'",numeric,NA
+Longitude,decimal degrees,"Longitude of the measurement site in decimal degrees, WGS 84 datum. These values represent measurement site centroids. They are used for scattering correction computations and are not intended for precise geospatial analysis. For accurate geospatial information, please use the geojson files in the associated package 'CHESS 2025: Location data for field observations and sampling.'",numeric,NA
+Notes,N/A,"Free-text field documenting measurement anomalies, terrain conditions, procedural deviations, or additional context. NA indicates no notes were recorded.",text,NA
+QC_Flag,N/A,Controlled-text field with codes indicating QC flags. g1: One or more gap fraction values exceeded 1.0 and were capped at 1.0. a0: A record contains one or more 0.0 values; gap fraction is coerced to NA and excluded from LAI and scattering correction computations. b0: B record contains one or more 0.0 values; gap fraction is allowed to stand at 0.0 and is included in LAI and scattering correction computations.,text,NA
+Focal_Tree_Species,N/A,"Four-letter USDA taxonomic species code for the focal tree within or near the LAI plot. ABLA=subalpine fir (Abies lasiocarpa), PICO=lodgepole pine (Pinus contorta), PIEN=Engelmann spruce (Picea engelmannii), POTR=quaking aspen (Populus tremuloides), PSME=Rocky Mountain Douglas fir (Pseudotsuga menziesii).",text,NA
+Plot_Contains_Focal_Tree,N/A,Whether the LAI measurement plot physically contains the focal tree (TRUE) or is located nearby in a representative stand (FALSE).,text,NA
+A_Record,N/A,Identifier for the LI-COR LAI-2200C A (above-canopy reference) data record in the raw instrument file. Often shared across multiple sites within a sampling area and measured under similar open-sky conditions.,text,NA
+B_Record,N/A,Identifier for the LI-COR LAI-2200C B (below-canopy) data record in the raw instrument file. Typically unique to each site.,text,NA
+K_Record,N/A,Identifier for the LI-COR LAI-2200C K (scattering correction) data record in the raw instrument file. Sometimes shared across nearby sites measured under similar open-sky conditions.,text,NA
+A_Record_Azimuth,degrees,"Compass azimuth toward which the sensor was oriented for A and B records, and for the final K record observation.",numeric,NA
+Corner,N/A,"Index (1–4) identifying the below-canopy measurement position within the LAI plot, corresponding to one of four cardinal corners of the square plot.",text,NA
+L_2200,N/A,"Leaf area index computed using the LI-COR native 2200 algorithm, corrected for foliage clumping via the apparent clumping factor.",numeric,NA
+Le_2200,N/A,"Effective leaf area index from the LI-COR 2200 algorithm, assuming a random (non-clumped) foliage distribution. This is the uncorrected estimate prior to application of the clumping factor.",numeric,NA
+SEL_2200,N/A,"Standard error of the leaf area index estimate from the LI-COR 2200 algorithm, quantifying uncertainty across the azimuthal ring integration.",numeric,NA
+ACF_2200,N/A,"Apparent clumping factor from the LI-COR 2200 algorithm, defined as the ratio of effective LAI to true LAI. Values less than 1 indicate non-random (clumped) foliage distribution.",numeric,NA
+L_WN,N/A,"Leaf area index computed using the Welles and Norman inversion method, which fits an ellipsoidal leaf angle distribution to gap fraction data and applies a clumping correction.",numeric,NA
+Le_WN,N/A,"Effective leaf area index from the Welles and Norman method, assuming a random foliage distribution prior to clumping correction.",numeric,NA
+SEL_WN,N/A,Standard error of the leaf area index estimate from the Welles and Norman method.,numeric,NA
+ACF_WN,N/A,Apparent clumping factor from the Welles and Norman method.,numeric,NA
+L_LANG,N/A,"Leaf area index computed using the Lang method, which estimates LAI from the logarithmic average of gap fractions at each zenith ring, providing a clumping-corrected value.",numeric,NA
+SEL_LANG,N/A,Standard error of the leaf area index estimate from the Lang method.,numeric,NA
+L_ELLIP,N/A,"Leaf area index computed using ellipsoidal inversion of gap fraction data prior to scatter correction, representing an intermediate estimate in the scatter correction workflow.",numeric,NA
+L_SCATCOR,N/A,"Scatter-corrected leaf area index, adjusted for radiation scattering through foliage by accounting for non-zero leaf transmittance at the measurement wavelength, typically yielding a higher L than uncorrected estimates.",numeric,NA
+S_SCATCOR,N/A,"Final estimated scattering correction factor, applied to gap fraction estimates to compute L_SCATCOR.",numeric,NA
+ACF_SCATCOR,N/A,Apparent clumping factor derived from the scatter-corrected gap fraction analysis.,numeric,NA
+CHI_SCATCOR,N/A,"Leaf angle distribution parameter (chi) estimated during the scatter correction procedure, describing the eccentricity of the assumed ellipsoidal leaf angle distribution. A value of 1 indicates a spherical distribution, values less than 1 indicate more erectophile foliage, and values greater than 1 indicate more planophile foliage.",numeric,NA
+GAPS,N/A,"Mean gap fraction for each of the five sensor rings for which measurements were recorded, averaged over all records for that ring.",numeric,NA
+CNTCT,N/A,"Mean contact frequency (Kbar, the logarithm of the gap fraction divided by the path length), for each ring.",numeric,NA
+STDDEV,N/A,Standard error of contact frequency for each ring. ,numeric,NA
+AVGTRANS,N/A,Average transmittance for each ring.,numeric,NA
+ACFS,N/A,Apparent clumping factor (Ωapp) for each ring.,numeric,NA
+LAIj,N/A,"Leaf area index (LAI) computed for each measurement, j, in the record",numeric,NA
+GAPFRAC,N/A,Gap fraction estimated for each measurement record at each sensor ring. ,numeric,NA
+ANGLES,N/A,Midangles of the field of view for each of the five rings. ,numeric,NA
+KbeS,N/A,"Beam extinction coefficient for the sun direction, computed from solar zenith angle and the leaf angle distribution parameter chi. Describes the probability of beam interception per unit leaf area along the solar path.",numeric,NA
+KbeV1,N/A,Beam extinction coefficient for the view direction corresponding to sensor ring 1 (central zenith angle ~7 degrees).,numeric,NA
+KbeV2,N/A,Beam extinction coefficient for the view direction corresponding to sensor ring 2 (central zenith angle ~23 degrees).,numeric,NA
+KbeV3,N/A,Beam extinction coefficient for the view direction corresponding to sensor ring 3 (central zenith angle ~38 degrees).,numeric,NA
+KbeV4,N/A,Beam extinction coefficient for the view direction corresponding to sensor ring 4 (central zenith angle ~53 degrees).,numeric,NA
+KbeV5,N/A,Beam extinction coefficient for the view direction corresponding to sensor ring 5 (central zenith angle ~68 degrees).,numeric,NA
+Ileaf1,N/A,"Leaf-scattered irradiance intercepted by sensor ring 1. Represents the contribution of radiation scattered by foliage elements into the sensor view for that ring, estimated from the difference between measured and modeled gap fraction signals.",numeric,NA
+Ileaf2,N/A,Leaf-scattered irradiance intercepted by sensor ring 2.,numeric,NA
+Ileaf3,N/A,Leaf-scattered irradiance intercepted by sensor ring 3.,numeric,NA
+Ileaf4,N/A,Leaf-scattered irradiance intercepted by sensor ring 4.,numeric,NA
+Ileaf5,N/A,Leaf-scattered irradiance intercepted by sensor ring 5.,numeric,NA
+dKbeV1,N/A,Difference between the beam extinction coefficient for the sun direction (KbeS) and the beam extinction coefficient for sensor ring 1 (KbeV1). Used in partitioning scattered radiation between view and solar directions.,numeric,NA
+dKbeV2,N/A,Difference between KbeS and KbeV2.,numeric,NA
+dKbeV3,N/A,Difference between KbeS and KbeV3.,numeric,NA
+dKbeV4,N/A,Difference between KbeS and KbeV4.,numeric,NA
+dKbeV5,N/A,Difference between KbeS and KbeV5.,numeric,NA
+chi,N/A,"Leaf angle distribution parameter. A value of 1 indicates a spherical leaf angle distribution; values greater than 1 indicate a more planophile (horizontal) distribution, and values less than 1 indicate a more erectophile (vertical) distribution. Updated iteratively during the correction procedure.",numeric,NA
+f,N/A,"Fraction of intercepted radiation that is forward-scattered by leaves, derived from the leaf single-scattering albedo (omega) and leaf angle geometry. Negative values can arise during intermediate iterations before convergence.",numeric,NA
+Scat1,N/A,"Total scattered radiation correction term for sensor ring 1, combining contributions from leaf-scattered irradiance and the forward-scattering fraction. Applied to the measured gap fraction to remove scattering bias.",numeric,NA
+Scat2,N/A,Total scattered radiation correction term for sensor ring 2.,numeric,NA
+Scat3,N/A,Total scattered radiation correction term for sensor ring 3.,numeric,NA
+Scat4,N/A,Total scattered radiation correction term for sensor ring 4.,numeric,NA
+Scat5,N/A,Total scattered radiation correction term for sensor ring 5.,numeric,NA
+omega,N/A,"Leaf single-scattering albedo, representing the fraction of intercepted radiation that is scattered (reflected or transmitted) by an individual leaf rather than absorbed. Estimated iteratively and used to compute the forward-scattering fraction f. Values typically range from 0 to 1, though intermediate iterations may produce values outside this range before convergence.",numeric,NA
+L,N/A,"Leaf area index (LAI) estimated at each iteration of the scattering correction algorithm. The final converged value represents the scattering-corrected LAI for the site. Intermediate or non-converged iterations may show physically unrealistic values (e.g., negative or very large numbers).",numeric,NA
+L_FV2200,N/A,"Leaf area index (LAI) computed using LI-COR FV2200 software with the standard LI-COR 2200 algorithm, corrected for foliage clumping via the apparent clumping factor.",numeric,NA
+Le_FV2200,N/A,"Effective leaf area index computed using LI-COR FV2200 software with the standard LI-COR 2200 algorithm, assuming a random (non-clumped) foliage distribution. This is the uncorrected estimate prior to application of the clumping factor.",numeric,NA
+L_2200,N/A,"Leaf area index computed using the `rlai` R package with the LI-COR native 2200 algorithm, corrected for foliage clumping via the apparent clumping factor.",numeric,NA
+Le_2200,N/A,"Effective leaf area index computed using the `rlai` R package with the LI-COR native 2200 algorithm, assuming a random (non-clumped) foliage distribution. This is the uncorrected estimate prior to application of the clumping factor.",numeric,NA
+S_SCATCOR_FV2200,N/A,Scattering correction factor computing using LI-COR FV2200 software. This value is applied to gap fraction estimates to compute L_SCATCOR.,numeric,NA
+L_SCATCOR_FV2200,N/A,"Scatter-corrected leaf area index (LAI) computed using LI-COR FV2200 software. This value represents a correction on L_FV2200 for radiation scattering through foliage by accounting for non-zero leaf transmittance at the measurement wavelength, typically yielding a higher L than uncorrected estimates.",numeric,NA
+S_SCATCOR_rlai,N/A,Scattering correction factor computing using the `rlai` R package. This value is applied to gap fraction estimates to compute L_SCATCOR.,numeric,NA
+L_SCATCOR_rlai,N/A,"Scatter-corrected leaf area index (LAI) computed using the `rlai` R package. This value represents a correction on L_2200 for radiation scattering through foliage by accounting for non-zero leaf transmittance at the measurement wavelength, typically yielding a higher L than uncorrected estimates.",numeric,NA

@@ -1,0 +1,21 @@
+File_Name,File_Description,Standard,Contact
+flmd.csv,File-level metadata associated with dataset describing files contained within dataset.,ESS-DIVE FLMD v1,H. Marshall Worsham
+NEON_AOP_2018_CRBU_waveformlidar_userguide.pdf,User guide providing details on how to use the data contained in the dataset and detailed descriptions of each file.,N/A,H. Marshall Worsham
+*_waveform_ephemeris_array_img,Ephemeris array file includes the aircraft positional ephemera used in geolocation calculations.,N/A,H. Marshall Worsham
+*_waveform_ephemeris_array_img.hdr,Binary header file associated with an ephemeris array.,N/A,H. Marshall Worsham
+*_waveform_first_return.las,LASer format (las) file contains a point cloud of first returns as derived by the waveform processor.,N/A,H. Marshall Worsham
+*_waveform_geolocation_array_img,Geolocation array file comprises geolocation information for the waveforms.,N/A,H. Marshall Worsham
+*_waveform_geolocation_array_img.hdr,Binary header file associated with a geolocation array.,N/A,H. Marshall Worsham
+*_waveform_observation_array_img,"Waveform observation array file includes sensor timing, mirror angle value and geometries, calculated ranges, dark offsets, and intensities used in the geolocation calculations.",N/A,H. Marshall Worsham
+*_waveform_observation_array_img.hdr,Binary header file associated with an observation array.,N/A,H. Marshall Worsham
+*_waveform_outgoing_pulse_array_img,Outgoing pulse array comprises a 2D array of the outgoing T0 pulses and is a binary file with a 16-bit integer array of 100 columns and number of laser pulses rows.,N/A,H. Marshall Worsham
+*_waveform_outgoing_pulse_array_img.hdr,Binary header file associated with an outgoing pulse array.,N/A,H. Marshall Worsham
+*_waveform_product_boundary.kml,Waveform product boundary file is a Keyhole Markup Language (kml) file containing the coordinates of the linear ring polygon that describes the acquisition boundary (ground area) for the flightline.,N/A,H. Marshall Worsham
+*_waveform_product_browse.tif,Product browse file is a Tag Image Format File (.tif) depicting a rasterized point cloud from the flight.,N/A,H. Marshall Worsham
+*_waveform_return_pulse_array_img,Return pulse array is a 2D array of the waveform return pulses and is a binary file with a 16-bit integer array of 250 columns and number of laser pulses rows.,N/A,H. Marshall Worsham
+*_waveform_return_pulse_array_img.hdr,Binary header file associated with a return pulse array.,N/A,H. Marshall Worsham
+*_WaveformLidar_WorkOrder.xml,Work order file is an Extensible Markup Language (xml) file containing processing metadata from the NEON waveform digitizer.,N/A,H. Marshall Worsham
+*_waveform_impulse_response_img,Impulse response file is an approximation of the LiDAR system response function estimated from a hard target and is a 16-bit integer array zero-padded to 100 bins.,N/A,H. Marshall Worsham
+*_waveform_impulse_response_img.hdr,Binary header file associated with an impulse response array.,N/A,H. Marshall Worsham
+*_waveform_impulse_response_T0_img,Impulse response T0 file is the outgoing pulse corresponding to the return impulse response function and can be used for deconvolution of the true system reponse. ,N/A,H. Marshall Worsham
+*_waveform_impulse_response_T0_img.hdr,Binary header file associated with an impulse response array.,N/A,H. Marshall Worsham

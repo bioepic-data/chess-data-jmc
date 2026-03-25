@@ -1,0 +1,7 @@
+file_name,file_description,standard,header_rows,column_or_row_name_position
+*.fa,MAG (Metagenome-assembled genomes) fasta files for the bacterial and archaeal community from topsoils collected during NEON 2018 campaign.,N/A,-9999,-9999
+neon_Gs0149986_samples_soilproperties_metagenomes.csv,Sample information together with the accession numbers for the underlying metagenomes and the associated soil physical and chemical measurements in NMDC (National Microbiome Data Collaborative) compliant format.,National Microbiome Data Collaborative (NMDC),-9999,-9999
+samples.csv,Sample metadata file used to register IGSNs for the associated samples.,ESS-DIVE Sample v1,2,2
+neon_Gs0149986.kml,Location bounding box file for the sampled locations.,N/A,-9999,-9999
+flmd.csv,File-level metadata associated with dataset describing files contained within dataset.,ESS-DIVE FLMD v1,-9999,-9999
+dd.csv,Data dictionary defining column headers and other terms contained within data files across the dataset.,ESS-DIVE FLMD v1,-9999,-9999
