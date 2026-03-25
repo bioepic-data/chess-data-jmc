@@ -134,6 +134,190 @@ These items are based on the recorded prompts in `~/.claude/history.jsonl` for t
   - [`scripts/download_chess_data.sh`](chess/scripts/download_chess_data.sh)
   - numerous dataset-level `DOWNLOAD_LOG.md` files
 
+### Detailed technical implementation notes
+
+#### UO Ontology Integration
+
+- Downloaded UO (Units Ontology) version 2026-01-16 containing 574 unit definitions into `ontologies/uo/`
+- Created `scripts/parse_uo_ontology.py` to parse UO OBO format and extract term mappings:
+  - Parses term IDs, names, and synonyms from OBO stanzas
+  - Creates bidirectional lookup: name→ID and ID→name
+  - Outputs `/tmp/uo_terms.json` for fast access during conversion
+- Implemented unit-to-UO mapping function in `convert_to_ontologized.py`:
+  - Maps common units to UO terms: `%` → `UO:0000187` (percent), `m` → `UO:0000008` (meter), `°C` → `UO:0000027` (degree Celsius)
+  - Special handling for compound units: `ms/m` → `UO:0010002` (millisiemens per meter)
+  - Normalizes UO term names for column naming: lowercase, underscores for spaces, e.g., "degree Celsius" → "degree_celsius"
+- Added `unit_sys_oterm_id` field to `sys_ddt_typedef` metadata to record UO mappings
+
+#### BERVO Mapping Refinements
+
+Fixed several incorrect or missing BERVO term assignments in `geophysical_survey/dd_bervo.csv`:
+
+1. **SampleSiteCode**: Changed from generic "Boolean indicator" to "Identifier, Context = Site" (`bervo:BERVO_8000528`)
+   - Properly captures that this is a site identifier, not a boolean
+
+2. **VegetationType**: Changed from incorrect "Environmental sample location" to "Community type" (`bervo:BERVO_8000404`)
+   - Found by searching BERVO for "community" and "vegetation" terms
+
+3. **Site**: Mapped to "Region" (`bervo:BERVO_8000519`)
+   - User confirmed "region" exists in BERVO and is appropriate for this field
+
+4. **VWC_2 mapping issue**: Fixed spacing inconsistency
+   - Data dictionary had `"VWC _2"` (space before underscore) but CSV had `"VWC_2"`
+   - Added normalization logic in conversion script to handle `col_name.replace(' _', '_').replace('_ ', '_')`
+   - Updated dd_bervo.csv to use consistent `"VWC _2"` spelling
+
+#### CORAL Brick File Naming Convention Implementation
+
+Implemented comprehensive column naming convention in `convert_to_ontologized.py` following CORAL brick file standards:
+
+**Naming Pattern**: `{dimension_prefix}_{bervo_combination_normalized}_{uo_unit_name}`
+
+**Key Rules**:
+- All lowercase, underscores instead of spaces
+- Dimension prefix added based on variable classification
+- BERVO combination normalized: remove Context qualifiers, convert special characters
+- UO unit name appended from full term name (not abbreviation)
+- If dimension matches variable (e.g., `location_region`), keep as-is (don't reduce to just `region`)
+
+**Dimension Assignment Logic**:
+```python
+# TDR dataset
+dimension_1_fields = ['SampleSiteCode', 'Easting', 'Northing', 'VegetationType', 'Site']  # location
+dimension_2_fields = ['Collection Date']  # time
+data_variable_fields = ['VWC_1', 'VWC_2', 'avg_VWC', 'Temp_1', 'Temp_2', 'avg_Temp']
+
+# EMI dataset
+dimension_1_fields = ['Northing', 'Easting', 'Altitude', 'Site', 'Site Name']  # location
+dimension_2_fields = ['Time']  # time
+data_variable_fields = ['EC_0p5m_30kHz', 'IP_0p5m_30kHz', ...]  # 10 conductivity/in-phase measurements
+```
+
+**Normalization Process**:
+1. Remove Context qualifiers: `", Context = Site"`, `", Context = Collection"`
+2. Convert to lowercase
+3. Replace special characters: `, ` → `_`, ` = ` → `_`, `(` → ``, `)` → ``, spaces → `_`, commas → `_`, hyphens → `_`
+4. Collapse multiple underscores: `__` → `_`
+5. Append UO unit name if present
+6. Prepend dimension prefix (`location_` or `time_`)
+
+**Example Transformations**:
+- `"Identifier, Context = Site"` + dimension=location → `location_identifier`
+- `"Easting, Projected coordinate system = UTM Zone 13N"` + unit=m → `location_easting_projected_coordinate_system_utm_zone_13n_meter`
+- `"Volumetric water content, Depth = 20 (cm), replicate = 1"` + unit=% → `volumetric_water_content_depth_20_cm_replicate_1_percent`
+- `"Temperature, Depth = 20 (cm), statistic = average"` + unit=°C → `temperature_depth_20_cm_statistic_average_degree_celsius`
+- `"Soil electrical conductivity, Depth = 0.5 m, Frequency = 30 kHz"` + unit=ms/m → `soil_electrical_conductivity_depth_0.5_m_frequency_30_khz_millisiemens_per_meter`
+
+**Metadata Structure Changes**:
+- Renamed `original_csv_string` field to `original_description` in sys_ddt_typedef
+- Moved BERVO combination (e.g., "Volumetric water content, Depth = 20 cm, replicate = 1") to `comment` field
+- Original data dictionary definition text stored in `original_description` field
+- Added `dimension_number` field: 1 for location, 2 for time, NULL for data variables
+- Added `variable_number` field: sequential numbering within each dimension (1, 2, 3...) or for data variables
+
+**Generated Column Names** (TDR dataset, 375 records):
+```
+location_identifier
+location_easting_projected_coordinate_system_utm_zone_13n_meter
+location_northing_projected_coordinate_system_utm_zone_13n_meter
+location_community_type
+location_region
+time_date_context=collection
+volumetric_water_content_depth_20_cm_replicate_1_percent
+volumetric_water_content_depth_20_cm_replicate_2_percent
+volumetric_water_content_depth_20_cm_statistic_average_percent
+temperature_depth_20_cm_replicate_1_degree_celsius
+temperature_depth_20_cm_replicate_2_degree_celsius
+temperature_depth_20_cm_statistic_average_degree_celsius
+```
+
+**Generated Column Names** (EMI dataset, 10,000 records sampled from 186,909):
+```
+location_northing_projected_coordinate_system_utm_zone_13n_meter
+location_easting_projected_coordinate_system_utm_zone_13n_meter
+location_altitude_meter
+time
+soil_electrical_conductivity_depth_0.5_m_frequency_30_khz_millisiemens_per_meter
+electromagnetic_in-phase_response_depth_0.5_m_frequency_30_khz_parts_per_thousand
+soil_electrical_conductivity_depth_1.0_m_frequency_30_khz_millisiemens_per_meter
+electromagnetic_in-phase_response_depth_1.0_m_frequency_30_khz_parts_per_thousand
+soil_electrical_conductivity_depth_1.8_m_frequency_30_khz_millisiemens_per_meter
+electromagnetic_in-phase_response_depth_1.8_m_frequency_30_khz_parts_per_thousand
+location_region
+location_identifier_for_region
+```
+
+#### Technical Challenges and Solutions
+
+**Challenge 1: VWC_2 field missing from ontologized output**
+- **Problem**: VWC_2 data not appearing in sys_ddt_typedef despite being in dd_bervo.csv
+- **Root cause**: Data dictionary had `"VWC _2"` with space before underscore, but actual CSV column was `"VWC_2"` without space
+- **Solution**: Added normalization in mapping lookup to handle both variants: `normalized_name = col_name.replace(' _', '_').replace('_ ', '_')`
+
+**Challenge 2: Python SyntaxError in ddt_ndarray generation**
+- **Problem**: Complex nested f-string with escaped quotes causing syntax error
+- **Original code**: `f'[[{", ".join([f"\\"bervo:BERVO_8000528\\", ..."])}], ...]'`
+- **Solution**: Simplified to plain string literal avoiding f-string complexity: `'[["bervo:BERVO_8000528", "bervo:BERVO_8000440", ...], ...]'`
+
+**Challenge 3: Context qualifiers appearing in column names**
+- **Problem**: Column names contained `"context=collection"` and `"context=site"` fragments
+- **Root cause**: Only removing `", Context = "` (with spaces) but not `", Context="` or `"Context="` variants
+- **Solution**: Added comprehensive replacement patterns to handle all Context qualifier variations before building column name
+
+**Challenge 4: Determining dimension vs. data variable classification**
+- **Problem**: No automatic way to classify fields as dimension variables or data variables
+- **Solution**: Created explicit lists per dataset based on semantic understanding:
+  - Dimension 1 (location): spatial/site identification fields
+  - Dimension 2 (time): temporal fields
+  - Data variables: measured quantities (VWC, temperature, conductivity, in-phase response)
+
+#### Script Functionality Overview
+
+**`scripts/parse_uo_ontology.py`**:
+- Parses UO OBO format files
+- Extracts term IDs, names, and exact/related/narrow synonyms
+- Creates bidirectional mappings for lookup
+- Outputs JSON cache for fast access
+
+**`scripts/parse_bervo_ontology.py`**:
+- Parses BERVO OBO/JSON format files
+- Extracts 4,616 BERVO terms with definitions
+- Creates searchable term database
+- Outputs JSON cache for mapping operations
+
+**`scripts/convert_to_ontologized.py`**:
+- Main conversion script implementing CORAL naming convention
+- Reads dd_bervo.csv mapping files
+- Loads UO and BERVO term databases
+- Processes data files (CSV/DBF) into ontologized TSV format
+- Generates four output files per dataset:
+  1. `{dataset}_data.tsv`: Data with CORAL-compliant column names
+  2. `{dataset}_schema.py`: PySpark schema for Delta Lake
+  3. `{dataset}_ddt_ndarray.tsv`: Dataset-level metadata
+  4. `{dataset}_sys_ddt_typedef.tsv`: Column-level metadata with ontology mappings
+- Implements dimension/variable numbering system
+- Maps units to UO terms
+- Constructs column names from dimension prefix + BERVO combination + UO unit name
+
+**`scripts/convert_to_berdl_loader.py`**:
+- Converts ontologized TSV files to CSV format for BERDL ingest
+- Renames files following BERDL conventions
+- Generates `update_comments.py` script for post-ingest metadata
+- Creates `import_to_berdl/` staging directory
+
+**`scripts/build_import_to_berdl.py`**:
+- Orchestrates the full conversion pipeline
+- Calls convert_to_ontologized.py then convert_to_berdl_loader.py
+- Prepares complete BERDL ingest package
+
+#### Key Ontology Statistics
+
+- **BERVO**: 4,616 terms covering biological and environmental research variables
+- **UO**: 574 unit definitions from Units Ontology
+- **Geophysical survey datasets processed**:
+  - TDR plot data: 375 records, 12 fields (5 dimension variables, 6 data variables, 1 time variable)
+  - EMI survey: 186,909 records (sampled to 10,000), 12 fields (5 dimension variables, 10 data variables, 1 time variable)
+
 ### Attribution note
 
 - The items above are best treated as a high-confidence summary of earlier Claude-assisted workspace generation, not as a direct execution transcript.
