@@ -1,142 +1,149 @@
-column_or_row_name,BERVO Combination,BERVO Term,unit,definition,data_type
-file_name,unnecessary?,,N/A,Name of the files in the dataset/data package.,text
-file_description,unnecessary?,,N/A,A brief description of the files in the dataset/data package.,text
-standard,unnecessary?,,N/A,Standard applied to the data file.,text
-column_or_row_name,unnecessary?,,N/A,Column or row name contained within a file.,text
-unit,unnecessary?,,N/A,Unit of column or row name within file.,text
-definition,unnecessary?,,N/A,Definition of column or row name.,text
-data_type,unnecessary?,,N/A,Type of data that the column or row contains.,text
-missing_value_code,unnecessary?,,N/A,Missing value code for a column or row name.,text
-sample name,,,N/A,"A local identifier or name that for the material sample used for extracting nucleic acids, and subsequent sequencing.",text
-source material identifier,,,N/A,"A unique identifier assigned to a material sample used for extracting nucleic acids, and subsequent sequencing.",text
-analysis/data type,,,N/A,Analysis/data type associated with sample.,text
-sample linkage,,,N/A,Linkage for sample.,text
-broad-scale environmental context,,,N/A,Report the major environmental system the sample or specimen came from.,text
-local environmental context,,,N/A,Report the entity or entities which are in the sample or specimens local vicinity and which you believe have significant causal influences on your sample or specimen.,text
-environmental medium,,,N/A,Report the environmental material(s) immediately surrounding the sample or specimen at the time of sampling.,text
-ecosystem,,,N/A,Ecosystem name associated with sample.,text
-ecosystem_category,,,N/A,Category of ecosystem associated with sample.,text
-ecosystem_type,,,N/A,Type of ecosystem associated with sample.,text
-ecosystem_subtype,,,N/A,Subtype of ecosystem associated with sample.,text
-specific_ecosystem,,,N/A,Specific ecosystem associated with sample.,text
-slope aspect,,,N/A,"The direction a slope faces. While looking down a slope use a compass to record the direction you are facing (direction or degrees); e.g., nw or 315 degrees. ",text
-history/agrochemical additions,,,N/A,"Addition of fertilizers, pesticides, etc. - amount and time of applications",text
-aluminum saturation/ extreme unusual properties,,,N/A,Aluminum saturation (esp. For tropical soils),text
-aluminum saturation method/ extreme unusual properties,,,N/A,Reference or method used in determining Al saturation,text
-mean annual precipitation,,,N/A,"The average of all annual precipitation values known, or an estimated equivalent value derived by such methods as regional indexes or Isohyetal maps",text
-mean annual temperature,"Temperature, statistic = average",bervo:BERVO_8000133,N/A,mean annual temperature,text
-history/crop rotation,Boolean indicator,suggested,N/A,"Whether or not crop is rotated, and if yes, rotation schedule",text
-current land use,,,N/A,Present state of sample site,text
-current vegetation,,,N/A,"Vegetation classification from one or more standard classification systems, or agricultural crop",text
-current vegetation method,,,N/A,Reference or method used in vegetation classification,text
-drainage classification,Taxon,bervo:BERVO_8000324,N/A,Drainage classification from a standard system such as the USDA system,text
-experimental factor,,,N/A,"Variable aspects of an experiment design that can be used to describe an experiment, or set of experiments, in an increasingly detailed manner.",text
-history/extreme events,,,N/A,Unusual physical events that may have affected microbial populations,text
-soil_taxonomic/FAO classification,Taxon,bervo:BERVO_8000324,N/A,Soil classification from the FAO World soil distribution from International Soil Reference and Information Centre (ISRIC). ,text
-history/fire,,,N/A,Historical and/or physical evidence of fire,text
-history/flooding,,,N/A,Historical and/or physical evidence of flooding,text
-heavy metals/ extreme unusual properties,,,N/A,Heavy metals present in the sequenced sample and their concentrations,text
-heavy metals method/ extreme unusual properties,,,N/A,Reference or method used in determining heavy metals,text
-soil horizon method,,,N/A,Reference or method used in determining soil horizon,text
-link to classification information,,,N/A,Link to digitized soil maps or other soil classification information,text
-link to climate information,,,N/A,Link to climate resource,text
-soil_taxonomic/local classification,Taxon,bervo:BERVO_8000324,N/A,Soil classification based on local soil classification system,text
-miscellaneous parameter,,,N/A,"Any other measurement performed or parameter collected, that is not listed here",text
-soil_taxonomic/local classification method,Taxon,bervo:BERVO_8000324,N/A,Reference or method used in determining the local soil classification,text
-oxygenation status of sample,,,N/A,Oxygenation status of sample,text
-history/previous land use method,Date,bervo:BERVO_8000239,N/A,Reference or method used in determining previous land use and dates,text
-history/previous land use,Date,bervo:BERVO_8000239,N/A,Previous land use and dates,text
-profile position,,,N/A,Cross-sectional position in the hillslope where sample was collected.sample area position in relation to surrounding areas,text
-average seasonal precipitation,,,N/A,"The average of all seasonal precipitation values known, or an estimated equivalent value derived by such methods as regional indexes or Isohyetal maps",text
-mean seasonal temperature,"Temperature, statistic = average",bervo:BERVO_8000133,N/A,Mean seasonal temperature,text
-slope gradient,,,N/A,Commonly called 'slope'. The angle between ground surface and a horizontal line (in percent). This is the direction that overland water would flow. This measure is usually taken with a hand level meter or clinometer,text
-soil horizon,,,N/A,Specific layer in the land area which measures parallel to the soil surface and possesses physical characteristics which differ from the layers above and beneath,text
-soil texture measurement,,,N/A,"The relative proportion of different grain sizes of mineral particles in a soil, as described using a standard system; express as % sand (50 um to 2 mm), silt (2 um to 50 um), and clay (<2 um) with textural name (e.g., silty clay loam) optional",text
-soil texture method,,,N/A,Reference or method used in determining soil texture,text
-soil type,"Site, attribute = type",bervo:BERVO_8000514,N/A,Description of the soil type or classification.,text
-soil type method,"Site, attribute = type",bervo:BERVO_8000514,N/A,Reference or method used in determining soil series name or other lower-level classification,text
-temperature,Temperature,bervo:BERVO_8000133,N/A,Temperature of the sample at the time of sampling,text
-history/tillage,,,N/A,Note method(s) used for tilling,text
-water content,Volumetric water content,bervo:BERVO_0001743,N/A,Water content measurement,text
-water content method,Volumetric water content,bervo:BERVO_0001743,N/A,Reference or method used in determining the water content of soil,text
-pH method,,,N/A,Reference or method used in determining pH,text
-microbial biomass,,,N/A,The part of the organic matter in the soil that constitutes living microorganisms smaller than 5-10 micrometer. ,text
-microbial biomass method,,,N/A,Microbial biomass method associated with sample.,text
-carbon/nitrogen ratio,,,N/A,Ratio of amount or concentrations of carbon to nitrogen,text
-organic matter,,,N/A,Concentration of organic matter,text
-organic nitrogen,,,N/A,Concentration of organic nitrogen,text
-total carbon,,,N/A,Total carbon content,text
-total nitrogen content,,,N/A,Total nitrogen content of the sample,text
-total nitrogen content method,,,N/A,Reference or method used in determining the total nitrogen,text
-total organic carbon,,,N/A,Total organic carbon content,text
-total organic carbon method,,,N/A,Reference or method used in determining total organic carbon,text
-total phosphorus,,,N/A,"Total phosphorus concentration in the sample, calculated by: total phosphorus = total dissolved phosphorus + particulate phosphorus",text
-phosphate,,,N/A,Concentration of phosphate,text
-salinity,,,N/A,The total concentration of all dissolved salts in a liquid or solid sample.,text
-salinity method,,,N/A,Reference or method used in determining salinity,text
-links to additional analysis,,,N/A,Link to additional analysis results performed on the sample,text
-growth facility,,,N/A,"Type of facility where the sampled plant was grown; controlled vocabulary: growth chamber, open top chamber, glasshouse, experimental garden, field.",text
-storage conditions,,,N/A,Explain how and for how long the soil sample was stored before DNA extraction (fresh/frozen/other),text
-collection date,,,N/A,"The time of sampling, either as an instance (single point in time) or interval. ",date
-"geographic location (country and/or sea,region)",,,N/A,The geographical origin of the sample as defined by the country or sea name followed by specific region name.,text
-geographic location (latitude and longitude),Latitude,bervo:BERVO_8000395,N/A,The geographical origin of the sample as defined by latitude and longitude. ,text
-"elevation, meters",,,meters,"Elevation of the sampling site is its height above a fixed reference point, most commonly the mean sea level. Elevation is mainly used when referring to points on the earth's surface, while altitude is used for points above the surface, such as an aircraft in flight or a spacecraft in orbit",numeric
-sample storage temperature,Temperature,bervo:BERVO_8000133,N/A,"Temperature at which sample was stored, e.g. -80 degree Celsius",text
-composite design/sieving,,,N/A,Collection design of pooled samples and/or sieve size and amount of sample sieved,text
-"depth, meters",,,N/A,"The vertical distance below local surface. For sediment or soil samples depth is measured from sediment or soil surface, respectively.",text
-size-fraction lower threshold,,,N/A,Refers to the mesh/pore size used to pre-filter/pre-sort the sample. Materials smaller than the size threshold are excluded from the sample,text
-size-fraction upper threshold,,,N/A,Mesh or pore size of the device used to retain the sample. Materials larger than the size threshold are excluded from the sample.,text
-sample material processing,,,N/A,"A brief description of any processing applied to the sample during or after retrieving the sample from environment, or a link to the relevant protocol(s) performed",text
-biotic regimen,,,N/A,"Information about treatment(s) involving use of biotic factors, such as bacteria, viruses or fungi",text
-sample collection device,,,N/A,The device used to collect an environmental sample. ,text
-sample collection method,,,N/A,The method employed for collecting the sample,text
-air temperature regimen,Temperature,bervo:BERVO_8000133,N/A,"Information about treatment involving an exposure to varying temperatures; should include the temperature, treatment regimen including how many times the treatment was repeated, how long each treatment lasted, and the start and end time of the entire treatment; can include different temperature regimens",text
-chemical administration,,,N/A,"List of chemical compounds administered to the host or site where sampling occurred, and when (e.g. Antibiotics, n fertilizer, air filter); can include multiple compounds. ",text
-amount or size of sample collected,,,N/A,"The total amount or size (volume (ml), mass (g) or area (m2) ) of sample collected",text
-climate environment,,,N/A,"Treatment involving an exposure to a particular climate; treatment regimen including how many times the treatment was repeated, how long each treatment lasted, and the start and end time of the entire treatment; can include multiple climates",text
-gaseous environment,,,N/A,"Use of conditions with differing gaseous environments; should include the name of gaseous compound, amount administered, treatment duration, interval and total experimental duration; can include multiple gaseous environment regimens",text
-humidity regimen,,,N/A,"Information about treatment involving an exposure to varying degree of humidity; information about treatment involving use of growth hormones; should include amount of humidity administered, treatment regimen including how many times the treatment was repeated, how long each treatment lasted, and the start and end time of the entire treatment; can include multiple regimens",text
-observed biotic relationship,,,N/A,"Description of relationship(s) between the subject organism and other organism(s) it is associated with. E.g., parasite on species X; mutualist with species Y. The target organism is the subject of the relationship, and the other organism(s) is the object",text
-light regimen,,,N/A,"Information about treatment(s) involving exposure to light, including both light intensity and quality",text
-watering regimen,,,N/A,"Information about treatment involving an exposure to watering frequencies, treatment regimen including how many times the treatment was repeated, how long each treatment lasted, and the start and end time of the entire treatment; can include multiple regimens",text
-pH,,,N/A,"pH measurement of the sample, or liquid portion of sample, or aqueous phase of the fluid",numeric
-"collection time, GMT",,,N/A,"collection time, GMT associated with sample.",text
-incubation collection date,"Date, Context=Collection",bervo:BERVO_8000239,N/A,incubation collection date associated with sample.,text
-"incubation collection time, GMT",,,N/A,"incubation collection time, GMT associated with sample.",text
-incubation start date,"Date, Context=Start",bervo:BERVO_8000239,N/A,incubation start date associated with sample.,text
-"incubation start time, GMT",,,N/A,"incubation start time, GMT associated with sample.",text
-filter method,,,N/A,filter method associated with sample.,text
-experimental factor- other,,,N/A,experimental factor- other associated with sample.,text
-non-microbial biomass,,,N/A,non-microbial biomass associated with sample.,text
-non-microbial biomass method,,,N/A,Reference or method used in determining non-microbial biomass,text
-organic nitrogen method,,,N/A,Reference or method used in determining organic nitrogen,text
-other treatments,,,N/A,other treatments associated with sample.,text
-isotope exposure/addition,,,N/A,isotope exposure/addition associated with sample.,text
-lime buffer capacity (at 30 minutes),,,N/A,lime buffer capacity (at 30 minutes) associated with sample.,text
-lime buffer capacity (after 5 day incubation),,,N/A,lime buffer capacity (after 5 day incubation) associated with sample.,text
-manganese,,,N/A,manganese associated with sample.,text
-microbial biomass carbon method,,,N/A,Reference or method used in determining microbial biomass carbon,text
-microbial biomass nitrogen method,,,N/A,Reference or method used in determining microbial biomass nitrogen,text
-microbial biomass carbon,,,N/A,microbial biomass carbon associated with sample.,text
-microbial biomass nitrogen,,,N/A,microbial biomass nitrogen associated with sample.,text
-zinc,,,N/A,zinc associated with sample.,text
-ammonium nitrogen,,,N/A,ammonium nitrogen associated with sample.,text
-nitrate_nitrogen,,,N/A,nitrate_nitrogen associated with sample.,text
-nitrite_nitrogen,,,N/A,nitrite_nitrogen associated with sample.,text
-bulk electrical conductivity,,,N/A,bulk electrical conductivity associated with sample.,text
-infiltrations,,,N/A,infiltrations associated with sample.,text
-Sample_Collection_Date,"Date, Context=Collection",bervo:BERVO_8000239,YYYY-MM-DD,Date of sample collection.,date
-IGSN,,,N/A,International Generic Sample Number (IGSN) for associated source sample.,text
-Sample Name,,,N/A,Name of associated sample.,text
-Release Date,Date,bervo:BERVO_8000239,YYYY-MM-DD,Date when sample metadata should be publicly accessible and searchable.,text
-Collection method,,,N/A,Method of collection of sample.,text
-Latitude,Latitude,bervo:BERVO_8000395,N/A,Latitude of the location where the sample was collected.,numeric
-Longitude,Longitude,bervo:BERVO_8000396,N/A,Longitude of the location where the sample was collected.,numeric
-Navigation type,,,N/A,Type of geolocation instrument used to obtain geographic coordinates.,text
-Primary physiographic feature,,,N/A,Description of the primary physiographic feature of which the sample was collected.,text
-Field program/cruise,,,N/A,Associated project of which the sample was collected for.,text
-Collector/Chief Scientist,,,N/A,Name of the person(s) who collected the sample.,text
-Collection date,"Date, Context=Collection",bervo:BERVO_8000239,N/A,Date of collection of the sample collected.,date
-Depth in core max,,,N/A,"Depth of core, maximum.",numeric
-Depth scale,,,N/A,Scale associated with depth of sample collection.,text
-Country,,,N/A,Country associated of sample collected.,text
+column_or_row_name,BERVO Combination,BERVO Term,unit,definition,data_type,source_file,berdl_export_status,nonempty_value_count,sample_values,mapping_notes,proposed_bervo_term
+file_name,unnecessary?,,,Name of the files in the dataset/data package.,text,,data_dictionary_metadata,,,,
+file_description,unnecessary?,,,A brief description of the files in the dataset/data package.,text,,data_dictionary_metadata,,,,
+standard,unnecessary?,,,Standard applied to the data file.,text,,data_dictionary_metadata,,,,
+column_or_row_name,unnecessary?,,,Column or row name contained within a file.,text,,data_dictionary_metadata,,,,
+unit,unnecessary?,,,Unit of column or row name within file.,text,,data_dictionary_metadata,,,,
+definition,unnecessary?,,,Definition of column or row name.,text,,data_dictionary_metadata,,,,
+data_type,unnecessary?,,,Type of data that the column or row contains.,text,,data_dictionary_metadata,,,,
+missing_value_code,unnecessary?,,,Missing value code for a column or row name.,text,,data_dictionary_metadata,,,,
+sample name,"Identifier, Context = environmental sample",BERVO:8000528,,"A local identifier or name that for the material sample used for extracting nucleic acids, and subsequent sequencing.",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,used_in_berdl_data_table,250,002-ER18-SC-SDNA | 003-ER18-SC-SDNA | 004-ER18-SC-SDNA | 005-ER18-SC-SDNA | 006-ER18-SC-SDNA,,
+source material identifier,"Identifier, Context = source material",BERVO:8000528,,"A unique identifier assigned to a material sample used for extracting nucleic acids, and subsequent sequencing.",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,used_in_berdl_data_table,249,10.58052/IER1800PH | 10.58052/IER1800PI | 10.58052/IER1800PJ | 10.58052/IER1800PK | 10.58052/IER1800PL,,
+analysis/data type,"Environmental measurement, Context = analysis data type",BERVO:8000412,,Analysis/data type associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,metagenomics,,
+sample linkage,"Identifier, Context = sample linkage",BERVO:8000528,,Linkage for sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+broad-scale environmental context,"Environmental feature, Context = broad scale",BERVO:8000400,,Report the major environmental system the sample or specimen came from.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,terrestrial biome [ENVO:00000446],,
+local environmental context,"Environmental feature, Context = local",BERVO:8000400,,Report the entity or entities which are in the sample or specimens local vicinity and which you believe have significant causal influences on your sample or specimen.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,mountain [ENVO:00000081],,
+environmental medium,Environmental material,BERVO:8000402,,Report the environmental material(s) immediately surrounding the sample or specimen at the time of sampling.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,bulk soil [ENVO:00005802],,
+ecosystem,Ecosystem,BERVO:8000043,,Ecosystem name associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,Environmental,,
+ecosystem_category,"Ecosystem, Context = category",BERVO:8000043,,Category of ecosystem associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,Terrestrial,,
+ecosystem_type,"Ecosystem, Context = type",BERVO:8000043,,Type of ecosystem associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,Soil,,
+ecosystem_subtype,"Ecosystem, Context = subtype",BERVO:8000043,,Subtype of ecosystem associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,Watershed,,
+specific_ecosystem,"Ecosystem, Context = specific",BERVO:8000043,,Specific ecosystem associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,Unclassified,,
+slope aspect,"Slope, Context = aspect",BERVO:8000031,,"The direction a slope faces. While looking down a slope use a compass to record the direction you are facing (direction or degrees); e.g., nw or 315 degrees. ",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+history/agrochemical additions,,,,"Addition of fertilizers, pesticides, etc. - amount and time of applications",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+aluminum saturation/ extreme unusual properties,,,,Aluminum saturation (esp. For tropical soils),text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+aluminum saturation method/ extreme unusual properties,,,,Reference or method used in determining Al saturation,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+mean annual precipitation,"Precipitation, statistic = mean annual",BERVO:8000032,,"The average of all annual precipitation values known, or an estimated equivalent value derived by such methods as regional indexes or Isohyetal maps",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+mean annual temperature,"Temperature, statistic = mean annual",BERVO:8000133,,mean annual temperature,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+history/crop rotation,,,,"Whether or not crop is rotated, and if yes, rotation schedule",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+current land use,"Environmental sample location, Context = current land use",BERVO:8000514,,Present state of sample site,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+current vegetation,"Taxon, Context = current vegetation",BERVO:8000324,,"Vegetation classification from one or more standard classification systems, or agricultural crop",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+current vegetation method,"Method, Context = vegetation classification",BERVO:8000303,,Reference or method used in vegetation classification,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+drainage classification,"Condition, Context = drainage classification",BERVO:8000302,,Drainage classification from a standard system such as the USDA system,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+experimental factor,,,,"Variable aspects of an experiment design that can be used to describe an experiment, or set of experiments, in an increasingly detailed manner.",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+history/extreme events,,,,Unusual physical events that may have affected microbial populations,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+soil_taxonomic/FAO classification,"Soil type, Context = FAO classification",BERVO:8000497,,Soil classification from the FAO World soil distribution from International Soil Reference and Information Centre (ISRIC). ,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+history/fire,,,,Historical and/or physical evidence of fire,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+history/flooding,,,,Historical and/or physical evidence of flooding,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+heavy metals/ extreme unusual properties,,,,Heavy metals present in the sequenced sample and their concentrations,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+heavy metals method/ extreme unusual properties,,,,Reference or method used in determining heavy metals,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+soil horizon method,"Method, Context = soil horizon",BERVO:8000303,,Reference or method used in determining soil horizon,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+link to classification information,,,,Link to digitized soil maps or other soil classification information,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+link to climate information,,,,Link to climate resource,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+soil_taxonomic/local classification,"Soil type, Context = local classification",BERVO:8000497,,Soil classification based on local soil classification system,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+miscellaneous parameter,,,,"Any other measurement performed or parameter collected, that is not listed here",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+soil_taxonomic/local classification method,"Method, Context = local soil classification",BERVO:8000303,,Reference or method used in determining the local soil classification,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+oxygenation status of sample,,,,Oxygenation status of sample,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+history/previous land use method,,,,Reference or method used in determining previous land use and dates,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+history/previous land use,,,,Previous land use and dates,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+profile position,,,,Cross-sectional position in the hillslope where sample was collected.sample area position in relation to surrounding areas,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+average seasonal precipitation,"Precipitation, statistic = average seasonal",BERVO:8000032,,"The average of all seasonal precipitation values known, or an estimated equivalent value derived by such methods as regional indexes or Isohyetal maps",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+mean seasonal temperature,"Temperature, statistic = mean seasonal",BERVO:8000133,,Mean seasonal temperature,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+slope gradient,"Slope, Context = gradient",BERVO:8000031,,Commonly called 'slope'. The angle between ground surface and a horizontal line (in percent). This is the direction that overland water would flow. This measure is usually taken with a hand level meter or clinometer,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+soil horizon,"Layer, Context = soil horizon",BERVO:8000226,,Specific layer in the land area which measures parallel to the soil surface and possesses physical characteristics which differ from the layers above and beneath,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+soil texture measurement,"Soil type, Context = texture",BERVO:8000497,,"The relative proportion of different grain sizes of mineral particles in a soil, as described using a standard system; express as % sand (50 um to 2 mm), silt (2 um to 50 um), and clay (<2 um) with textural name (e.g., silty clay loam) optional",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+soil texture method,"Method, Context = soil texture",BERVO:8000303,,Reference or method used in determining soil texture,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+soil type,Soil type,BERVO:8000497,,Description of the soil type or classification.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+soil type method,"Method, Context = soil type",BERVO:8000303,,Reference or method used in determining soil series name or other lower-level classification,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+temperature,"Temperature, Context = sample collection",BERVO:8000133,,Temperature of the sample at the time of sampling,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+history/tillage,,,,Note method(s) used for tilling,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+water content,"Volumetric water content, Context = water filled pore space",BERVO:0001743,percent,Water content measurement,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,used_in_berdl_data_table,245,1.07 % water filled pore space | 1.01 % water filled pore space | 0.91 % water filled pore space | 0.95 % water filled pore space | 0.85 % water filled pore space,,
+water content method,"Method, Context = volumetric water content",BERVO:8000303,,Reference or method used in determining the water content of soil,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,volumetric soil water content; volume water per volume soil (vol/vol),,
+pH method,"Method, Context = pH",BERVO:8000303,,Reference or method used in determining pH,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,measured in 1:1 w/vol slurry (10.2136/sssabookser5.3.c16),,
+microbial biomass,"Biomass, Context = microbial",BERVO:8000296,,The part of the organic matter in the soil that constitutes living microorganisms smaller than 5-10 micrometer. ,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+microbial biomass method,"Method, Context = microbial biomass",BERVO:8000303,,Microbial biomass method associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+carbon/nitrogen ratio,Carbon to nitrogen ratio,BERVO:8000109,,Ratio of amount or concentrations of carbon to nitrogen,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+organic matter,Organic matter,BERVO:8000286,,Concentration of organic matter,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+organic nitrogen,"Nitrogen, Context = organic",BERVO:8000167,,Concentration of organic nitrogen,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+total carbon,"Carbon, statistic = total",BERVO:8000075,,Total carbon content,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+total nitrogen content,"Nitrogen, statistic = total",BERVO:8000167,,Total nitrogen content of the sample,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+total nitrogen content method,"Method, Context = total nitrogen",BERVO:8000303,,Reference or method used in determining the total nitrogen,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+total organic carbon,Soil organic carbon content,BERVO:0001523,,Total organic carbon content,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+total organic carbon method,"Method, Context = soil organic carbon",BERVO:8000303,,Reference or method used in determining total organic carbon,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+total phosphorus,"Phosphorus, statistic = total",BERVO:8000001,,"Total phosphorus concentration in the sample, calculated by: total phosphorus = total dissolved phosphorus + particulate phosphorus",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+phosphate,Phosphate,BERVO:8000138,,Concentration of phosphate,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+salinity,Salinity,BERVO:8000427,,The total concentration of all dissolved salts in a liquid or solid sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+salinity method,"Method, Context = salinity",BERVO:8000303,,Reference or method used in determining salinity,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+links to additional analysis,"Identifier, Context = additional analysis link",BERVO:8000528,,Link to additional analysis results performed on the sample,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+growth facility,"Environmental sample location, Context = growth facility",BERVO:8000514,,"Type of facility where the sampled plant was grown; controlled vocabulary: growth chamber, open top chamber, glasshouse, experimental garden, field.",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,field,,
+storage conditions,"Condition, Context = sample storage",BERVO:8000302,,Explain how and for how long the soil sample was stored before DNA extraction (fresh/frozen/other),text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,frozen,,
+collection date,"Date, Context = collection",BERVO:8000239,,"The time of sampling, either as an instance (single point in time) or interval. ",date,neon_Gs0149986_samples_soilproperties_metagenomes.csv,used_in_berdl_data_table,250,2018-06-14 | 2018-06-15 | 2018-06-27 | 2018-06-16 | 2018-06-19,,
+"geographic location (country and/or sea,region)","Region, Context = geographic location",BERVO:8000519,,The geographical origin of the sample as defined by the country or sea name followed by specific region name.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,"USA: Crested Butte, CO",,
+geographic location (latitude and longitude),"Location, Context = latitude and longitude",BERVO:8000394,degree,The geographical origin of the sample as defined by latitude and longitude. ,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,used_in_berdl_data_table,250,38.957288 -106.9861 | 38.957368 -106.98616 | 38.957477 -106.986105 | 38.957461 -106.986231 | 38.957868 -106.984834,,
+"elevation, meters",Altitude,BERVO:8000099,meter,"Elevation of the sampling site is its height above a fixed reference point, most commonly the mean sea level. Elevation is mainly used when referring to points on the earth's surface, while altitude is used for points above the surface, such as an aircraft in flight or a spacecraft in orbit",numeric,neon_Gs0149986_samples_soilproperties_metagenomes.csv,used_in_berdl_data_table,250,2906.94828 | 2906.45436 | 2906.61235 | 2905.96338 | 2913.57895,,
+sample storage temperature,"Temperature, Context = sample storage",BERVO:8000133,degree Celsius,"Temperature at which sample was stored, e.g. -80 degree Celsius",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,-80 Celsius,,
+composite design/sieving,"Method, Context = composite design and sieving",BERVO:8000303,,Collection design of pooled samples and/or sieve size and amount of sample sieved,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+"depth, meters","Depth, Context = sample interval",BERVO:8000069,meter,"The vertical distance below local surface. For sediment or soil samples depth is measured from sediment or soil surface, respectively.",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,0 - 0.05,,
+size-fraction lower threshold,,,,Refers to the mesh/pore size used to pre-filter/pre-sort the sample. Materials smaller than the size threshold are excluded from the sample,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+size-fraction upper threshold,,,,Mesh or pore size of the device used to retain the sample. Materials larger than the size threshold are excluded from the sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+sample material processing,"Method, Context = sample material processing",BERVO:8000303,,"A brief description of any processing applied to the sample during or after retrieving the sample from environment, or a link to the relevant protocol(s) performed",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+biotic regimen,,,,"Information about treatment(s) involving use of biotic factors, such as bacteria, viruses or fungi",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+sample collection device,"Instrument, Context = sample collection",BERVO:8000306,,The device used to collect an environmental sample. ,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+sample collection method,"Method, Context = sample collection",BERVO:8000303,,The method employed for collecting the sample,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+air temperature regimen,"Temperature, Context = air regimen",BERVO:8000133,,"Information about treatment involving an exposure to varying temperatures; should include the temperature, treatment regimen including how many times the treatment was repeated, how long each treatment lasted, and the start and end time of the entire treatment; can include different temperature regimens",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+chemical administration,,,,"List of chemical compounds administered to the host or site where sampling occurred, and when (e.g. Antibiotics, n fertilizer, air filter); can include multiple compounds. ",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+amount or size of sample collected,,,,"The total amount or size (volume (ml), mass (g) or area (m2) ) of sample collected",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+climate environment,,,,"Treatment involving an exposure to a particular climate; treatment regimen including how many times the treatment was repeated, how long each treatment lasted, and the start and end time of the entire treatment; can include multiple climates",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+gaseous environment,,,,"Use of conditions with differing gaseous environments; should include the name of gaseous compound, amount administered, treatment duration, interval and total experimental duration; can include multiple gaseous environment regimens",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+humidity regimen,,,,"Information about treatment involving an exposure to varying degree of humidity; information about treatment involving use of growth hormones; should include amount of humidity administered, treatment regimen including how many times the treatment was repeated, how long each treatment lasted, and the start and end time of the entire treatment; can include multiple regimens",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+observed biotic relationship,,,,"Description of relationship(s) between the subject organism and other organism(s) it is associated with. E.g., parasite on species X; mutualist with species Y. The target organism is the subject of the relationship, and the other organism(s) is the object",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+light regimen,,,,"Information about treatment(s) involving exposure to light, including both light intensity and quality",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+watering regimen,,,,"Information about treatment involving an exposure to watering frequencies, treatment regimen including how many times the treatment was repeated, how long each treatment lasted, and the start and end time of the entire treatment; can include multiple regimens",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+pH,pH,BERVO:8000261,pH,"pH measurement of the sample, or liquid portion of sample, or aqueous phase of the fluid",numeric,neon_Gs0149986_samples_soilproperties_metagenomes.csv,used_in_berdl_data_table,224,6.29 | 6.11 | 6.27 | 6.51 | 5.84,,
+"collection time, GMT","Time, Context = collection",BERVO:8000238,,"collection time, GMT associated with sample.",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+incubation collection date,"Date, Context = incubation collection",BERVO:8000239,,incubation collection date associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+"incubation collection time, GMT","Time, Context = incubation collection",BERVO:8000238,,"incubation collection time, GMT associated with sample.",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+incubation start date,"Date, Context = incubation start",BERVO:8000239,,incubation start date associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+"incubation start time, GMT","Time, Context = incubation start",BERVO:8000238,,"incubation start time, GMT associated with sample.",text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+filter method,,,,filter method associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+experimental factor- other,,,,experimental factor- other associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+non-microbial biomass,"Biomass, Context = non-microbial",BERVO:8000296,,non-microbial biomass associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+non-microbial biomass method,"Method, Context = non-microbial biomass",BERVO:8000303,,Reference or method used in determining non-microbial biomass,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+organic nitrogen method,"Method, Context = organic nitrogen",BERVO:8000303,,Reference or method used in determining organic nitrogen,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+other treatments,,,,other treatments associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+isotope exposure/addition,,,,isotope exposure/addition associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+lime buffer capacity (at 30 minutes),,,,lime buffer capacity (at 30 minutes) associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+lime buffer capacity (after 5 day incubation),,,,lime buffer capacity (after 5 day incubation) associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+manganese,"Element, Context = manganese",BERVO:8000220,,manganese associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+microbial biomass carbon method,"Method, Context = microbial biomass carbon",BERVO:8000303,,Reference or method used in determining microbial biomass carbon,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,chloroform-fumigation extraction method,,
+microbial biomass nitrogen method,"Method, Context = microbial biomass nitrogen",BERVO:8000303,,Reference or method used in determining microbial biomass nitrogen,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,array_level_metadata,250,chloroform-fumigation extraction method (10.1016/0038-0717(85)90144-0),,
+microbial biomass carbon,"Biomass, Context = microbial, Element = carbon, Environmental material = dry soil",BERVO:8000296,milligram per kilogram,microbial biomass carbon associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,used_in_berdl_data_table,248,214.6 ug C/g dry soil | 245.9 ug C/g dry soil | 136.1 ug C/g dry soil | 186.4 ug C/g dry soil | 269.2 ug C/g dry soil,,
+microbial biomass nitrogen,"Biomass, Context = microbial, Element = nitrogen, Environmental material = dry soil",BERVO:8000296,milligram per kilogram,microbial biomass nitrogen associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,used_in_berdl_data_table,248,28.7 ug N/g dry soil | 40.8 ug N/g dry soil | 11.4 ug N/g dry soil | 38.2 ug N/g dry soil | 35.5 ug N/g dry soil,,
+zinc,"Element, Context = zinc",BERVO:8000220,,zinc associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+ammonium nitrogen,"Ammonium, Element = nitrogen, Environmental material = dry soil",BERVO:8000113,milligram per kilogram,ammonium nitrogen associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,used_in_berdl_data_table,248,5.68 µg per g | 3.28 µg per g | 8.17 µg per g | 4.04 µg per g | 4.24 µg per g,,
+nitrate_nitrogen,"Nitrate, Element = nitrogen, Environmental material = dry soil",BERVO:8000168,milligram per kilogram,nitrate_nitrogen associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,used_in_berdl_data_table,248,26.7 µg per g | 19.8 µg per g | 28.8 µg per g | 19.5 µg per g | 19 µg per g,,
+nitrite_nitrogen,"Nitrogen, Context = nitrite",BERVO:8000167,,nitrite_nitrogen associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+bulk electrical conductivity,"Conductivity, Context = bulk electrical",BERVO:8000348,,bulk electrical conductivity associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+infiltrations,,,,infiltrations associated with sample.,text,neon_Gs0149986_samples_soilproperties_metagenomes.csv,unused_empty_source_column,0,,,
+Sample_Collection_Date,"Date, Context = collection",BERVO:8000239,YYYY-MM-DD,Date of sample collection.,date,,unused_no_source_column,,,,
+IGSN,"Identifier, Context = source material",BERVO:8000528,,International Generic Sample Number (IGSN) for associated source sample.,text,samples.csv,used_in_berdl_data_table,249,10.58052/IER1800PH | 10.58052/IER1800PI | 10.58052/IER1800PJ | 10.58052/IER1800PK | 10.58052/IER1800PL,,
+Sample Name,"Identifier, Context = environmental sample",BERVO:8000528,,Name of associated sample.,text,samples.csv,used_in_berdl_data_table,249,002-ER18-SC-D1a | 003-ER18-SC-D1a | 004-ER18-SC-D1a | 005-ER18-SC-D1a | 006-ER18-SC-D1a,,
+Release Date,"Date, Context = release",BERVO:8000239,YYYY-MM-DD,Date when sample metadata should be publicly accessible and searchable.,text,samples.csv,array_level_metadata,249,2020-08-20,,
+Collection method,"Method, Context = sample collection",BERVO:8000303,,Method of collection of sample.,text,samples.csv,array_level_metadata,249,"Collect soil samples from top 10 cm using 2-3 cores from with meadow plot or under the bulk of tree/shrub canopies. Samples placed in polyethylene bag and on ice for transfer from field to remote lab. Child samples for sensitive nutrient, microbial, and root analyses extracted immediately and handled seperately. Remaining sample air dried and passed through 2mm sieve.",,
+Latitude,Latitude,BERVO:8000395,degree,Latitude of the location where the sample was collected.,numeric,samples.csv,used_in_berdl_data_table,249,38.95729 | 38.95737 | 38.95748 | 38.95746 | 38.95787,,
+Longitude,Longitude,BERVO:8000396,degree,Longitude of the location where the sample was collected.,numeric,samples.csv,used_in_berdl_data_table,249,-106.986 | -106.985 | -106.952 | -106.953 | -107.066,,
+Navigation type,"Method, Context = navigation",BERVO:8000303,,Type of geolocation instrument used to obtain geographic coordinates.,text,samples.csv,array_level_metadata,249,GPS,,
+Primary physiographic feature,"Environmental feature, Context = physiographic",BERVO:8000400,,Description of the primary physiographic feature of which the sample was collected.,text,samples.csv,array_level_metadata,249,Mountain,,
+Field program/cruise,"Identifier, Context = field program",BERVO:8000528,,Associated project of which the sample was collected for.,text,samples.csv,array_level_metadata,249,Watershed Function SFA,,
+Collector/Chief Scientist,"Identifier, Context = collector",BERVO:8000528,,Name of the person(s) who collected the sample.,text,samples.csv,array_level_metadata,249,K. Dana Chadwick,,
+Collection date,"Date, Context = collection",BERVO:8000239,,Date of collection of the sample collected.,date,samples.csv,used_in_berdl_data_table,249,2018-06-14T04:00:00Z | 2018-06-15T04:00:00Z | 2018-06-27T04:00:00Z | 2018-06-16T04:00:00Z | 2018-06-19T04:00:00Z,,
+Depth in core max,"Depth, Context = core maximum",BERVO:8000069,meter,"Depth of core, maximum.",numeric,samples.csv,array_level_metadata,249,0.1,,
+Depth scale,"Method, Context = depth scale",BERVO:8000303,,Scale associated with depth of sample collection.,text,samples.csv,redundant_to_typed_unit,249,meters,,
+Country,Country,BERVO:8000398,,Country associated of sample collected.,text,samples.csv,array_level_metadata,249,United States,,
+City/Township,"Region, Context = city",BERVO:8000519,,City or township associated with the sample.,text,samples.csv,array_level_metadata,249,Crested Butte,,
+Current Archive,"Identifier, Context = archive",BERVO:8000528,,Current archive where the sample is held.,text,samples.csv,array_level_metadata,249,"Geosciences and Environmental Change Science Center, USGS Federal Center, Lakewood, CO",,
+Current archive contact,"Identifier, Context = archive contact",BERVO:8000528,,Contact for the current sample archive.,text,samples.csv,array_level_metadata,249,"K. Dana Chadwick, kdc@stanford.edu",,
+Description,"Comment, Context = sample description",BERVO:8000305,,Free-text description of the collected sample.,text,samples.csv,array_level_metadata,249,"Soil samples, 0-10 cm",,
+Location description,"Location, Context = description",BERVO:8000394,,Description of the sample collection location.,text,samples.csv,used_in_berdl_data_table,249,RMBL Research Meadow | Pumphouse | Mt. Cinnamon | Snodgrass | Bradley,,
+Material,Environmental material,BERVO:8000402,,Material of the collected sample.,text,samples.csv,array_level_metadata,249,Soil,,
+State/Province,"Region, Context = state",BERVO:8000519,,State or province associated with the sample.,text,samples.csv,array_level_metadata,249,Colorado,,

@@ -319,7 +319,8 @@ def main():
             "csv": {
                 "header": True,
                 "delimiter": ",",
-                "inferSchema": False
+                "inferSchema": False,
+                "nullValue": ""
             }
         },
         "tables": tables

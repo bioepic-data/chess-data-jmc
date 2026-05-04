@@ -400,3 +400,44 @@ The sections above contain two types of information with different levels of acc
   - `ontologies/`
   - generated directories such as `import_to_berdl/`
 - Created the initial commit and pushed `main` to GitHub.
+
+### CHESS BERDL ingest retry after BERIL refresh
+
+- Refreshed Codex skills from `/h/jmc/src/BERIL-research-observatory/.claude/skills`.
+- Used the updated `berdl-ingest` workflow and `/h/jmc/src/BERIL-research-observatory/scripts/ingest_lib.py` with the refreshed token in `/h/jmc/src/BERIL-research-observatory/.env`.
+- Fixed generated EMI column names by replacing decimal points with underscores in ontology-derived BERDL column identifiers, e.g. `depth_0.5_m` became `depth_0_5_m`.
+- Regenerated `ontologized_datasets/` and `import_to_berdl/`, including `schema.sql`, `sys_oterm.csv`, and `update_comments.py`.
+- Found that size-based MinIO upload skipping left stale bronze CSV objects when `.` was replaced by `_`, because the byte size did not change.
+- Force-uploaded all generated CSV files under `tenant-general-warehouse/bervodata/datasets/chess/` before rerunning overwrite ingest.
+- Verified the bronze EMI header contained sanitized identifiers before ingest.
+- Completed overwrite ingest into namespace `bervodata_chess` with all row counts matching:
+  - `ddt_ndarray`: 5
+  - `geophysical_survey_emi_survey`: 186,909
+  - `geophysical_survey_tdr_plot_data`: 375
+  - `soil_metagenomes_mag_manifest`: 1,982
+  - `soil_metagenomes_nmdc_soil_properties`: 250
+  - `soil_metagenomes_sample_metadata`: 249
+  - `sys_ddt_typedef`: 50
+  - `sys_oterm`: 2,880
+- Ran generated post-ingest SQL updates successfully:
+  - rebuilt `ddt_ndarray` and `sys_ddt_typedef` from bronze CSVs
+  - applied table and column comments to data tables and `sys_oterm`
+
+### Metadata CSV quoting fix
+
+- Rechecked local `import_to_berdl/ddt_ndarray.csv` and `import_to_berdl/sys_ddt_typedef.csv` with Python's CSV parser:
+  - `ddt_ndarray.csv`: 5 rows, 15 columns, no row-width errors
+  - `sys_ddt_typedef.csv`: 50 rows, 15 columns, no row-width errors
+- Queried `bervodata_chess.ddt_ndarray` and confirmed the Spark SQL CSV rebuild had misparsed commas inside quoted metadata fields:
+  - all 5 rows had shifted values beginning at `ddt_ndarray_metadata`
+  - `ddt_ndarray_type_sys_oterm_id` contained fragments such as `""East River` instead of BERVO IDs
+- Queried `bervodata_chess.sys_ddt_typedef` and confirmed it was not affected:
+  - 50 rows
+  - no malformed `unit_sys_oterm_id`, `dimension_oterm_id`, or `variable_oterm_id`
+  - comma-containing comments remained intact
+- Tested Spark CSV options and confirmed `quote '"'` plus `escape '"'` correctly parses RFC-style doubled quotes in `ddt_ndarray.csv`.
+- Updated `scripts/build_import_to_berdl.py` so generated `update_comments.py` uses explicit `quote` and `escape` settings for metadata CSV temp views.
+- Regenerated `import_to_berdl/` and reran `update_comments.py` against `bervodata_chess`.
+- Verified fixed remote tables:
+  - `ddt_ndarray`: 5 rows, `bad_metadata = 0`, `bad_type_id = 0`
+  - `sys_ddt_typedef`: 50 rows, `bad_unit_id = 0`, `bad_dimension_id = 0`, `bad_variable_id = 0`

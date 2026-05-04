@@ -91,6 +91,92 @@ def load_table_comments(ddt_ndarray_csv_path):
     return comments
 
 
+def sql_literal(value):
+    return value.replace("'", "''")
+
+
+def ddl_columns(schema):
+    lines = []
+    for idx, (column_name, column_type) in enumerate(schema):
+        comma = ',' if idx < len(schema) - 1 else ''
+        lines.append(f'        {column_name} {column_type}{comma}')
+    return '\n'.join(lines)
+
+
+def csv_select_columns(schema):
+    select_parts = []
+    for column_name, column_type in schema:
+        if column_type == 'BIGINT':
+            expr = (
+                f"CAST(CASE WHEN {column_name} IS NULL OR TRIM({column_name}) = '' "
+                f"THEN NULL ELSE {column_name} END AS BIGINT) AS {column_name}"
+            )
+        else:
+            expr = column_name
+        select_parts.append(f'        {expr}')
+    return ',\n'.join(select_parts)
+
+
+def metadata_rebuild_lines(database_name='chess',
+                           bucket_name='cdm-lake',
+                           tenant_name='bervodata',
+                           dataset_name='chess'):
+    bronze_base = f's3a://{bucket_name}/tenant-general-warehouse/{tenant_name}/datasets/{dataset_name}'
+    silver_base = f's3a://{bucket_name}/tenant-sql-warehouse/{tenant_name}/{tenant_name}_{dataset_name}.db'
+    rebuild_specs = [
+        ('ddt_ndarray', DDT_NDARRAY_SCHEMA),
+        ('sys_ddt_typedef', SYS_DDT_TYPEDEF_SCHEMA),
+    ]
+
+    lines = [
+        '# Rebuild metadata tables that are not handled correctly by the BERDL CSV importer.\n',
+        'print("DEBUG: rebuilding ddt_ndarray and sys_ddt_typedef from bronze CSV files")\n',
+        '\n',
+    ]
+    for table_name, schema in rebuild_specs:
+        temp_view = f'_chess_{table_name}_csv'
+        csv_path = f'{bronze_base}/{table_name}.csv'
+        delta_path = f'{silver_base}/{table_name}'
+        lines.extend([
+            f'print("DEBUG: rebuilding table: {table_name}")\n',
+            'spark.sql("""\n',
+            f"    CREATE OR REPLACE TEMPORARY VIEW {temp_view}\n",
+            '    USING csv\n',
+            '    OPTIONS (\n',
+            f"        path '{sql_literal(csv_path)}',\n",
+            "        header 'true',\n",
+            "        delimiter ',',\n",
+            "        quote '\"',\n",
+            "        escape '\"',\n",
+            "        inferSchema 'false',\n",
+            "        nullValue ''\n",
+            '    )\n',
+            '""")\n',
+            '\n',
+            'spark.sql("""\n',
+            f"    DROP TABLE IF EXISTS {database_name}.{table_name}\n",
+            '""")\n',
+            '\n',
+            'spark.sql("""\n',
+            f"    CREATE TABLE {database_name}.{table_name} (\n",
+            ddl_columns(schema) + '\n',
+            '    )\n',
+            '    USING DELTA\n',
+            f"    LOCATION '{sql_literal(delta_path)}'\n",
+            '""")\n',
+            '\n',
+            'spark.sql("""\n',
+            f"    INSERT OVERWRITE TABLE {database_name}.{table_name}\n",
+            '    SELECT\n',
+            csv_select_columns(schema) + '\n',
+            f"    FROM {temp_view}\n",
+            '""")\n',
+            f'print("DEBUG: rebuilt table: {table_name}")\n',
+            '\n',
+        ])
+    return lines
+
+
 def generate_update_comments(output_dir, table_comments, schema_comments, database_name='chess'):
     script_path = output_dir / 'update_comments.py'
     lines = [
@@ -100,6 +186,8 @@ def generate_update_comments(output_dir, table_comments, schema_comments, databa
         'print("DEBUG: starting comment updates")\n',
         '\n',
     ]
+
+    lines.extend(metadata_rebuild_lines(database_name=database_name))
 
     for table_name in sorted(schema_comments):
         lines.append(f'# Update comments for table: {table_name}\n')
@@ -295,6 +383,85 @@ SYS_OTERM_COMMENTS = [
 ]
 
 
+DDT_NDARRAY_SCHEMA = [
+    ('ddt_ndarray_id', 'STRING'),
+    ('ddt_ndarray_name', 'STRING'),
+    ('ddt_ndarray_description', 'STRING'),
+    ('ddt_ndarray_metadata', 'STRING'),
+    ('ddt_ndarray_type_sys_oterm_id', 'STRING'),
+    ('ddt_ndarray_type_sys_oterm_name', 'STRING'),
+    ('ddt_ndarray_shape', 'STRING'),
+    ('ddt_ndarray_dimension_types_sys_oterm_id', 'STRING'),
+    ('ddt_ndarray_dimension_types_sys_oterm_name', 'STRING'),
+    ('ddt_ndarray_dimension_variable_types_sys_oterm_id', 'STRING'),
+    ('ddt_ndarray_dimension_variable_types_sys_oterm_name', 'STRING'),
+    ('ddt_ndarray_variable_types_sys_oterm_id', 'STRING'),
+    ('ddt_ndarray_variable_types_sys_oterm_name', 'STRING'),
+    ('withdrawn_date', 'STRING'),
+    ('superceded_by_ddt_ndarray_id', 'STRING'),
+]
+
+
+SYS_DDT_TYPEDEF_SCHEMA = [
+    ('ddt_ndarray_id', 'STRING'),
+    ('berdl_column_name', 'STRING'),
+    ('berdl_column_data_type', 'STRING'),
+    ('scalar_type', 'STRING'),
+    ('foreign_key', 'STRING'),
+    ('comment', 'STRING'),
+    ('unit_sys_oterm_id', 'STRING'),
+    ('unit_sys_oterm_name', 'STRING'),
+    ('dimension_number', 'BIGINT'),
+    ('dimension_oterm_id', 'STRING'),
+    ('dimension_oterm_name', 'STRING'),
+    ('variable_number', 'BIGINT'),
+    ('variable_oterm_id', 'STRING'),
+    ('variable_oterm_name', 'STRING'),
+    ('original_description', 'STRING'),
+]
+
+
+SYS_OTERM_SCHEMA = [
+    ('sys_oterm_id', 'STRING'),
+    ('parent_sys_oterm_id', 'STRING'),
+    ('sys_oterm_ontology', 'STRING'),
+    ('sys_oterm_name', 'STRING'),
+    ('sys_oterm_synonyms', 'STRING'),
+    ('sys_oterm_definition', 'STRING'),
+    ('sys_oterm_links', 'STRING'),
+    ('sys_oterm_properties', 'STRING'),
+]
+
+
+def quote_sql_identifier(name):
+    return f'`{name}`'
+
+
+def create_table_sql(table_name, columns):
+    lines = [f'CREATE TABLE {quote_sql_identifier(table_name)} (']
+    for idx, (column_name, column_type) in enumerate(columns):
+        comma = ',' if idx < len(columns) - 1 else ''
+        lines.append(f'    {quote_sql_identifier(column_name)} {column_type}{comma}')
+    lines.append(');')
+    return '\n'.join(lines)
+
+
+def write_schema_sql(output_path, schema_comments):
+    sections = [
+        create_table_sql('ddt_ndarray', DDT_NDARRAY_SCHEMA),
+    ]
+
+    for table_name in sorted(schema_comments):
+        columns = [(col['name'], col['type']) for col in schema_comments[table_name]]
+        sections.append(create_table_sql(table_name, columns))
+
+    sections.extend([
+        create_table_sql('sys_ddt_typedef', SYS_DDT_TYPEDEF_SCHEMA),
+        create_table_sql('sys_oterm', SYS_OTERM_SCHEMA),
+    ])
+    output_path.write_text('\n\n'.join(sections) + '\n', encoding='utf-8')
+
+
 def main():
     base_dir = Path(__file__).resolve().parents[1]
     input_dir = base_dir / 'ontologized_datasets'
@@ -309,12 +476,15 @@ def main():
     ddt_ndarray_csv = output_dir / 'ddt_ndarray.csv'
     sys_ddt_typedef_csv = output_dir / 'sys_ddt_typedef.csv'
     sys_oterm_csv = output_dir / 'sys_oterm.csv'
+    schema_sql = output_dir / 'schema.sql'
     if ddt_ndarray_csv.exists():
         ddt_ndarray_csv.unlink()
     if sys_ddt_typedef_csv.exists():
         sys_ddt_typedef_csv.unlink()
     if sys_oterm_csv.exists():
         sys_oterm_csv.unlink()
+    if schema_sql.exists():
+        schema_sql.unlink()
 
     first_ddt = True
     first_sys = True
@@ -345,11 +515,13 @@ def main():
     table_comments = load_table_comments(ddt_ndarray_csv)
     table_comments['sys_oterm'] = 'Ontology terms used in CHESS (BERVO and UO)'
     generate_update_comments(output_dir, table_comments, schema_comments)
+    write_schema_sql(schema_sql, schema_comments)
 
     print(f'Created {len(data_tsvs)} data CSV files in {output_dir}')
     print(f'Created {ddt_ndarray_csv.name}')
     print(f'Created {sys_ddt_typedef_csv.name}')
     print(f'Created {sys_oterm_csv.name} ({sys_oterm_count} terms)')
+    print(f'Created {schema_sql.name}')
     print('Created update_comments.py')
 
 

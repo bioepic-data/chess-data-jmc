@@ -13,6 +13,7 @@ import csv
 import json
 import struct
 import re
+import tarfile
 from pathlib import Path
 
 
@@ -22,7 +23,27 @@ def load_uo_terms():
         with open('/tmp/uo_terms.json', 'r') as f:
             return json.load(f)
     except FileNotFoundError:
-        return {}
+        terms = {}
+        uo_path = Path(__file__).resolve().parents[1] / 'ontologies' / 'uo' / 'uo.obo'
+        current_id = None
+        current_name = None
+        if not uo_path.exists():
+            return terms
+        with uo_path.open('r', encoding='utf-8') as f:
+            for raw_line in f:
+                line = raw_line.strip()
+                if line == '[Term]':
+                    if current_id and current_name:
+                        terms[current_id] = current_name
+                    current_id = None
+                    current_name = None
+                elif line.startswith('id: UO:'):
+                    current_id = line.split('id: ', 1)[1]
+                elif line.startswith('name: '):
+                    current_name = line.split('name: ', 1)[1]
+            if current_id and current_name:
+                terms[current_id] = current_name
+        return terms
 
 
 def dbf_to_records(dbf_path):
@@ -99,12 +120,33 @@ def map_unit_to_uo(unit_str):
     unit_mappings = {
         'm': 'UO:0000008',
         'meter': 'UO:0000008',
+        'meters': 'UO:0000008',
         'metre': 'UO:0000008',
+        'metres': 'UO:0000008',
+        'celsius': 'UO:0000027',
         'celsius (°c)': 'UO:0000027',
         '°c': 'UO:0000027',
         'degree celsius': 'UO:0000027',
+        'degree': 'UO:0000185',
+        'degrees': 'UO:0000185',
+        'decimal degree': 'UO:0000185',
+        'decimal degrees': 'UO:0000185',
         '%': 'UO:0000187',
         'percent': 'UO:0000187',
+        'ph': 'UO:0000196',
+        'milligram per kilogram': 'UO:0000308',
+        'milligrams per kilogram': 'UO:0000308',
+        'mg/kg': 'UO:0000308',
+        'microgram per gram': 'UO:0000308',
+        'micrograms per gram': 'UO:0000308',
+        'microgram per gram dry soil': 'UO:0000308',
+        'micrograms per gram dry soil': 'UO:0000308',
+        'ug/g': 'UO:0000308',
+        'µg/g': 'UO:0000308',
+        'byte': 'UO:0000233',
+        'bytes': 'UO:0000233',
+        'count': 'UO:0000189',
+        'count unit': 'UO:0000189',
         'ms/m': 'UO:0010002',
         'millisiemens': 'UO:0010002',
         'ppt': 'UO:0000168',
@@ -212,7 +254,23 @@ def normalize_missing_value(value):
         return ''
 
     text = str(value).strip()
-    if text.lower() in {'n/a', 'na', 'null', 'none', '-9999'}:
+    try:
+        if float(text) in {-999.0, -9999.0}:
+            return ''
+    except ValueError:
+        pass
+    if text.lower() in {
+        '',
+        'n/a',
+        'na',
+        'nan',
+        'null',
+        'none',
+        '-999',
+        '-999.0',
+        '-9999',
+        '-9999.0',
+    }:
         return ''
 
     return value
@@ -256,6 +314,7 @@ def bervo_combination_to_column_name(bervo_combination, unit_str, dimension_pref
         (' ', '_'),
         (',', '_'),
         ('-', '_'),  # hyphen to underscore
+        ('.', '_'),
         ('__', '_'),
     ]
 
@@ -355,6 +414,918 @@ def build_schema_lines(schema_fields):
 
     lines.append("])\n")
     return lines
+
+
+TYPEDEF_FIELDNAMES = [
+    'ddt_ndarray_id', 'berdl_column_name', 'berdl_column_data_type',
+    'scalar_type', 'foreign_key', 'comment', 'unit_sys_oterm_id',
+    'unit_sys_oterm_name', 'dimension_number', 'dimension_oterm_id',
+    'dimension_oterm_name', 'variable_number', 'variable_oterm_id',
+    'variable_oterm_name', 'original_description'
+]
+
+
+DDT_NDARRAY_FIELDNAMES = [
+    'ddt_ndarray_id', 'ddt_ndarray_name', 'ddt_ndarray_description',
+    'ddt_ndarray_metadata', 'ddt_ndarray_type_sys_oterm_id',
+    'ddt_ndarray_type_sys_oterm_name', 'ddt_ndarray_shape',
+    'ddt_ndarray_dimension_types_sys_oterm_id',
+    'ddt_ndarray_dimension_types_sys_oterm_name',
+    'ddt_ndarray_dimension_variable_types_sys_oterm_id',
+    'ddt_ndarray_dimension_variable_types_sys_oterm_name',
+    'ddt_ndarray_variable_types_sys_oterm_id',
+    'ddt_ndarray_variable_types_sys_oterm_name',
+    'withdrawn_date', 'superceded_by_ddt_ndarray_id'
+]
+
+
+SOIL_DIMENSIONS = {
+    1: ('BERVO:8000342', 'Environmental sample', 'environmental_sample'),
+    2: ('BERVO:8000394', 'Location', 'location'),
+    3: ('BERVO:8000238', 'Time', 'time'),
+    4: ('BERVO:8000409', 'Genome', 'genome'),
+}
+
+
+SOIL_INFERRED_UNITS = {
+    # The NMDC data dictionary leaves these as N/A, but the reported values
+    # include units or have standard coordinate/depth units.
+    'water content': 'percent',
+    'sample storage temperature': 'degree Celsius',
+    'depth, meters': 'meter',
+    'elevation, meters': 'meter',
+    'geographic location (latitude and longitude)': 'degree',
+    'pH': 'pH',
+    'Latitude': 'degree',
+    'Longitude': 'degree',
+    'Depth in core max': 'meter',
+    # Source values are reported as ug/g dry soil; numerically this is mg/kg.
+    'microbial biomass carbon': 'milligram per kilogram',
+    'microbial biomass nitrogen': 'milligram per kilogram',
+    'ammonium nitrogen': 'milligram per kilogram',
+    'nitrate_nitrogen': 'milligram per kilogram',
+}
+
+
+SOIL_DD_SOURCE_ALIASES = {
+    'Primary physiographic feature': 'Primary Physiographic feature',
+    'Field program/cruise': 'Field program/Cruise',
+}
+
+
+SOIL_DD_EXTRA_SOURCE_DEFINITIONS = {
+    'Material': ('Material of the collected sample.', 'text'),
+    'Description': ('Free-text description of the collected sample.', 'text'),
+    'Location description': ('Description of the sample collection location.', 'text'),
+    'City/Township': ('City or township associated with the sample.', 'text'),
+    'State/Province': ('State or province associated with the sample.', 'text'),
+    'Current Archive': ('Current archive where the sample is held.', 'text'),
+    'Current archive contact': ('Contact for the current sample archive.', 'text'),
+}
+
+
+SOIL_ARRAY_METADATA_SOURCES = {
+    'analysis/data type',
+    'environmental medium',
+    'depth, meters',
+    'growth facility',
+    'storage conditions',
+    'broad-scale environmental context',
+    'local environmental context',
+    'ecosystem',
+    'ecosystem_category',
+    'ecosystem_type',
+    'ecosystem_subtype',
+    'specific_ecosystem',
+    'geographic location (country and/or sea,region)',
+    'sample storage temperature',
+    'water content method',
+    'pH method',
+    'microbial biomass carbon method',
+    'microbial biomass nitrogen method',
+    'Material',
+    'Description',
+    'Collection method',
+    'Depth in core max',
+    'Navigation type',
+    'Primary Physiographic feature',
+    'City/Township',
+    'State/Province',
+    'Country',
+    'Release Date',
+    'Field program/Cruise',
+    'Collector/Chief Scientist',
+    'Current Archive',
+    'Current archive contact',
+}
+
+
+SOIL_REDUNDANT_SOURCES = {
+    'Depth scale',
+}
+
+
+SOIL_MAPPING_REVIEW = {
+    'analysis/data type': (
+        'Current mapping uses Environmental measurement with an analysis-data-type context.',
+        'Analysis data type',
+    ),
+    'growth facility': (
+        'Current mapping uses Environmental sample location with a growth-facility context.',
+        'Growth facility',
+    ),
+    'storage conditions': (
+        'Current mapping uses generic Condition with a sample-storage context.',
+        'Sample storage condition',
+    ),
+    'water content method': (
+        'Current mapping uses generic Method with a volumetric-water-content context.',
+        'Volumetric water content measurement method',
+    ),
+    'pH method': (
+        'Current mapping uses generic Method with a pH context.',
+        'pH measurement method',
+    ),
+    'microbial biomass carbon': (
+        'Current mapping uses generic Biomass plus carbon and dry-soil qualifiers.',
+        'Soil microbial biomass carbon content',
+    ),
+    'microbial biomass nitrogen': (
+        'Current mapping uses generic Biomass plus nitrogen and dry-soil qualifiers.',
+        'Soil microbial biomass nitrogen content',
+    ),
+    'microbial biomass carbon method': (
+        'Current mapping uses generic Method with a microbial-biomass-carbon context.',
+        'Microbial biomass carbon measurement method',
+    ),
+    'microbial biomass nitrogen method': (
+        'Current mapping uses generic Method with a microbial-biomass-nitrogen context.',
+        'Microbial biomass nitrogen measurement method',
+    ),
+    'ammonium nitrogen': (
+        'Current mapping uses Ammonium plus nitrogen and dry-soil qualifiers.',
+        'Soil ammonium nitrogen content',
+    ),
+    'nitrate_nitrogen': (
+        'Current mapping uses Nitrate plus nitrogen and dry-soil qualifiers.',
+        'Soil nitrate nitrogen content',
+    ),
+    'Collection method': (
+        'Current mapping uses generic Method with a sample-collection context.',
+        'Environmental sample collection method',
+    ),
+    'Depth scale': (
+        'Source values are unit metadata; current mapping as Method is weak.',
+        'Depth measurement unit',
+    ),
+    'Navigation type': (
+        'Current mapping uses generic Method with a navigation context.',
+        'Navigation method',
+    ),
+    'Description': (
+        'Current mapping uses generic Comment with a sample-description context.',
+        'Environmental sample description',
+    ),
+    'Field program/cruise': (
+        'Current mapping uses generic Identifier with a field-program context.',
+        'Field program identifier',
+    ),
+    'Collector/Chief Scientist': (
+        'Current mapping uses generic Identifier with a collector context.',
+        'Collector identifier',
+    ),
+    'Current Archive': (
+        'Current mapping uses generic Identifier with an archive context.',
+        'Archive identifier',
+    ),
+    'Current archive contact': (
+        'Current mapping uses generic Identifier with an archive-contact context.',
+        'Archive contact identifier',
+    ),
+}
+
+
+def normalize_column_token(text):
+    """Normalize arbitrary labels to BERDL-safe column name fragments."""
+    text = normalize_bervo_curie(str(text or '')).replace('µ', 'u')
+    text = re.sub(r'\[[^\]]*\]', '', text)
+    text = text.lower()
+    text = re.sub(r'[^a-z0-9]+', '_', text)
+    text = re.sub(r'_+', '_', text).strip('_')
+    return text
+
+
+def ensure_unique_column_name(candidate, used_names, source_name):
+    """Keep generated ontology-based column names unique within a table."""
+    base = normalize_column_token(candidate) or normalize_column_token(source_name)
+    name = base
+    if name not in used_names:
+        used_names.add(name)
+        return name
+
+    source_suffix = normalize_column_token(source_name)
+    if source_suffix and source_suffix not in name:
+        name = f"{base}_{source_suffix}"
+        if name not in used_names:
+            used_names.add(name)
+            return name
+
+    counter = 2
+    while f"{base}_{counter}" in used_names:
+        counter += 1
+    name = f"{base}_{counter}"
+    used_names.add(name)
+    return name
+
+
+def parse_first_float(value):
+    """Extract the first numeric token from mixed numeric/unit fields."""
+    normalized = normalize_missing_value(value)
+    if normalized == '':
+        return ''
+    match = re.search(r'-?\d+(?:\.\d+)?', str(normalized).replace(',', ''))
+    if not match:
+        return ''
+    number = match.group(0)
+    if float(number) in {-999.0, -9999.0}:
+        return ''
+    return number
+
+
+def parse_latitude(value):
+    parts = str(normalize_missing_value(value)).split()
+    return parts[0] if len(parts) >= 2 else ''
+
+
+def parse_longitude(value):
+    parts = str(normalize_missing_value(value)).split()
+    return parts[1] if len(parts) >= 2 else ''
+
+
+def parse_depth_start(value):
+    parts = re.findall(r'-?\d+(?:\.\d+)?', str(normalize_missing_value(value)))
+    return parts[0] if parts else ''
+
+
+def parse_depth_end(value):
+    parts = re.findall(r'-?\d+(?:\.\d+)?', str(normalize_missing_value(value)))
+    return parts[-1] if parts else ''
+
+
+def read_csv_records(path, skip_rows=0):
+    with path.open('r', encoding='utf-8-sig', newline='') as f:
+        for _ in range(skip_rows):
+            next(f)
+        reader = csv.DictReader(f)
+        return list(reader), reader.fieldnames
+
+
+def load_dd_definitions(dd_path):
+    definitions = {}
+    units = {}
+    data_types = {}
+    with dd_path.open('r', encoding='utf-8-sig', newline='') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            col = row['column_or_row_name']
+            definitions[col] = row.get('definition', '')
+            units[col] = row.get('unit', '')
+            data_types[col] = row.get('data_type', '')
+    return definitions, units, data_types
+
+
+def make_spec(source, combination, term, *, dimension_number='', unit='',
+              spark_type='StringType', transform=None, output_name=None,
+              original_description=''):
+    return {
+        'source': source,
+        'combination': combination,
+        'term': term,
+        'dimension_number': dimension_number,
+        'unit': unit,
+        'spark_type': spark_type,
+        'transform': transform,
+        'output_name': output_name,
+        'original_description': original_description,
+    }
+
+
+def get_soil_mapping_definitions():
+    """Mappings for soil metagenome metadata fields that are imported or documented."""
+    return {
+        'sample name': ('Identifier, Context = environmental sample', 'BERVO:8000528'),
+        'Sample Name': ('Identifier, Context = environmental sample', 'BERVO:8000528'),
+        'source material identifier': ('Identifier, Context = source material', 'BERVO:8000528'),
+        'IGSN': ('Identifier, Context = source material', 'BERVO:8000528'),
+        'analysis/data type': ('Environmental measurement, Context = analysis data type', 'BERVO:8000412'),
+        'sample linkage': ('Identifier, Context = sample linkage', 'BERVO:8000528'),
+        'broad-scale environmental context': ('Environmental feature, Context = broad scale', 'BERVO:8000400'),
+        'local environmental context': ('Environmental feature, Context = local', 'BERVO:8000400'),
+        'environmental medium': ('Environmental material', 'BERVO:8000402'),
+        'Material': ('Environmental material', 'BERVO:8000402'),
+        'ecosystem': ('Ecosystem', 'BERVO:8000043'),
+        'ecosystem_category': ('Ecosystem, Context = category', 'BERVO:8000043'),
+        'ecosystem_type': ('Ecosystem, Context = type', 'BERVO:8000043'),
+        'ecosystem_subtype': ('Ecosystem, Context = subtype', 'BERVO:8000043'),
+        'specific_ecosystem': ('Ecosystem, Context = specific', 'BERVO:8000043'),
+        'slope aspect': ('Slope, Context = aspect', 'BERVO:8000031'),
+        'slope gradient': ('Slope, Context = gradient', 'BERVO:8000031'),
+        'mean annual precipitation': ('Precipitation, statistic = mean annual', 'BERVO:8000032'),
+        'average seasonal precipitation': ('Precipitation, statistic = average seasonal', 'BERVO:8000032'),
+        'mean annual temperature': ('Temperature, statistic = mean annual', 'BERVO:8000133'),
+        'mean seasonal temperature': ('Temperature, statistic = mean seasonal', 'BERVO:8000133'),
+        'temperature': ('Temperature, Context = sample collection', 'BERVO:8000133'),
+        'sample storage temperature': ('Temperature, Context = sample storage', 'BERVO:8000133'),
+        'air temperature regimen': ('Temperature, Context = air regimen', 'BERVO:8000133'),
+        'collection date': ('Date, Context = collection', 'BERVO:8000239'),
+        'Collection date': ('Date, Context = collection', 'BERVO:8000239'),
+        'Sample_Collection_Date': ('Date, Context = collection', 'BERVO:8000239'),
+        'Release Date': ('Date, Context = release', 'BERVO:8000239'),
+        'collection time, GMT': ('Time, Context = collection', 'BERVO:8000238'),
+        'incubation collection date': ('Date, Context = incubation collection', 'BERVO:8000239'),
+        'incubation collection time, GMT': ('Time, Context = incubation collection', 'BERVO:8000238'),
+        'incubation start date': ('Date, Context = incubation start', 'BERVO:8000239'),
+        'incubation start time, GMT': ('Time, Context = incubation start', 'BERVO:8000238'),
+        'geographic location (country and/or sea,region)': ('Region, Context = geographic location', 'BERVO:8000519'),
+        'geographic location (latitude and longitude)': ('Location, Context = latitude and longitude', 'BERVO:8000394'),
+        'Latitude': ('Latitude', 'BERVO:8000395'),
+        'Longitude': ('Longitude', 'BERVO:8000396'),
+        'elevation, meters': ('Altitude', 'BERVO:8000099'),
+        'Depth in core max': ('Depth, Context = core maximum', 'BERVO:8000069'),
+        'Depth scale': ('Method, Context = depth scale', 'BERVO:8000303'),
+        'depth, meters': ('Depth, Context = sample interval', 'BERVO:8000069'),
+        'Country': ('Country', 'BERVO:8000398'),
+        'City/Township': ('Region, Context = city', 'BERVO:8000519'),
+        'State/Province': ('Region, Context = state', 'BERVO:8000519'),
+        'Location description': ('Location, Context = description', 'BERVO:8000394'),
+        'Primary Physiographic feature': ('Environmental feature, Context = physiographic', 'BERVO:8000400'),
+        'Primary physiographic feature': ('Environmental feature, Context = physiographic', 'BERVO:8000400'),
+        'Navigation type': ('Method, Context = navigation', 'BERVO:8000303'),
+        'soil_taxonomic/FAO classification': ('Soil type, Context = FAO classification', 'BERVO:8000497'),
+        'soil_taxonomic/local classification': ('Soil type, Context = local classification', 'BERVO:8000497'),
+        'soil_taxonomic/local classification method': ('Method, Context = local soil classification', 'BERVO:8000303'),
+        'soil type': ('Soil type', 'BERVO:8000497'),
+        'soil type method': ('Method, Context = soil type', 'BERVO:8000303'),
+        'soil horizon': ('Layer, Context = soil horizon', 'BERVO:8000226'),
+        'soil horizon method': ('Method, Context = soil horizon', 'BERVO:8000303'),
+        'soil texture measurement': ('Soil type, Context = texture', 'BERVO:8000497'),
+        'soil texture method': ('Method, Context = soil texture', 'BERVO:8000303'),
+        'drainage classification': ('Condition, Context = drainage classification', 'BERVO:8000302'),
+        'current land use': ('Environmental sample location, Context = current land use', 'BERVO:8000514'),
+        'current vegetation': ('Taxon, Context = current vegetation', 'BERVO:8000324'),
+        'current vegetation method': ('Method, Context = vegetation classification', 'BERVO:8000303'),
+        'water content': ('Volumetric water content, Context = water filled pore space', 'BERVO:0001743'),
+        'water content method': ('Method, Context = volumetric water content', 'BERVO:8000303'),
+        'pH': ('pH', 'BERVO:8000261'),
+        'pH method': ('Method, Context = pH', 'BERVO:8000303'),
+        'microbial biomass': ('Biomass, Context = microbial', 'BERVO:8000296'),
+        'microbial biomass method': ('Method, Context = microbial biomass', 'BERVO:8000303'),
+        'microbial biomass carbon': ('Biomass, Context = microbial, Element = carbon, Environmental material = dry soil', 'BERVO:8000296'),
+        'microbial biomass nitrogen': ('Biomass, Context = microbial, Element = nitrogen, Environmental material = dry soil', 'BERVO:8000296'),
+        'microbial biomass carbon method': ('Method, Context = microbial biomass carbon', 'BERVO:8000303'),
+        'microbial biomass nitrogen method': ('Method, Context = microbial biomass nitrogen', 'BERVO:8000303'),
+        'non-microbial biomass': ('Biomass, Context = non-microbial', 'BERVO:8000296'),
+        'non-microbial biomass method': ('Method, Context = non-microbial biomass', 'BERVO:8000303'),
+        'carbon/nitrogen ratio': ('Carbon to nitrogen ratio', 'BERVO:8000109'),
+        'organic matter': ('Organic matter', 'BERVO:8000286'),
+        'organic nitrogen': ('Nitrogen, Context = organic', 'BERVO:8000167'),
+        'organic nitrogen method': ('Method, Context = organic nitrogen', 'BERVO:8000303'),
+        'total carbon': ('Carbon, statistic = total', 'BERVO:8000075'),
+        'total nitrogen content': ('Nitrogen, statistic = total', 'BERVO:8000167'),
+        'total nitrogen content method': ('Method, Context = total nitrogen', 'BERVO:8000303'),
+        'total organic carbon': ('Soil organic carbon content', 'BERVO:0001523'),
+        'total organic carbon method': ('Method, Context = soil organic carbon', 'BERVO:8000303'),
+        'total phosphorus': ('Phosphorus, statistic = total', 'BERVO:8000001'),
+        'phosphate': ('Phosphate', 'BERVO:8000138'),
+        'salinity': ('Salinity', 'BERVO:8000427'),
+        'salinity method': ('Method, Context = salinity', 'BERVO:8000303'),
+        'ammonium nitrogen': ('Ammonium, Element = nitrogen, Environmental material = dry soil', 'BERVO:8000113'),
+        'nitrate_nitrogen': ('Nitrate, Element = nitrogen, Environmental material = dry soil', 'BERVO:8000168'),
+        'nitrite_nitrogen': ('Nitrogen, Context = nitrite', 'BERVO:8000167'),
+        'bulk electrical conductivity': ('Conductivity, Context = bulk electrical', 'BERVO:8000348'),
+        'manganese': ('Element, Context = manganese', 'BERVO:8000220'),
+        'zinc': ('Element, Context = zinc', 'BERVO:8000220'),
+        'growth facility': ('Environmental sample location, Context = growth facility', 'BERVO:8000514'),
+        'storage conditions': ('Condition, Context = sample storage', 'BERVO:8000302'),
+        'composite design/sieving': ('Method, Context = composite design and sieving', 'BERVO:8000303'),
+        'sample material processing': ('Method, Context = sample material processing', 'BERVO:8000303'),
+        'sample collection device': ('Instrument, Context = sample collection', 'BERVO:8000306'),
+        'sample collection method': ('Method, Context = sample collection', 'BERVO:8000303'),
+        'Collection method': ('Method, Context = sample collection', 'BERVO:8000303'),
+        'Description': ('Comment, Context = sample description', 'BERVO:8000305'),
+        'Field program/Cruise': ('Identifier, Context = field program', 'BERVO:8000528'),
+        'Field program/cruise': ('Identifier, Context = field program', 'BERVO:8000528'),
+        'Collector/Chief Scientist': ('Identifier, Context = collector', 'BERVO:8000528'),
+        'Current Archive': ('Identifier, Context = archive', 'BERVO:8000528'),
+        'Current archive contact': ('Identifier, Context = archive contact', 'BERVO:8000528'),
+        'links to additional analysis': ('Identifier, Context = additional analysis link', 'BERVO:8000528'),
+    }
+
+
+def collect_soil_source_metadata(source_tables):
+    """Return source file and non-empty example values for soil source columns."""
+    values_by_column = {}
+    files_by_column = {}
+    for source_file, records in source_tables:
+        for record in records:
+            for column_name, raw_value in record.items():
+                if column_name is None:
+                    continue
+                values_by_column.setdefault(column_name, []).append(raw_value)
+                files_by_column.setdefault(column_name, set()).add(source_file)
+    return values_by_column, files_by_column
+
+
+def nonempty_source_values(values):
+    cleaned = []
+    for value in values:
+        normalized = normalize_missing_value(value)
+        if normalized == '':
+            continue
+        cleaned.append(str(normalized).strip().replace('\n', ' ').replace('\r', ' '))
+    return cleaned
+
+
+def sample_source_values(values, limit=5):
+    samples = []
+    for value in nonempty_source_values(values):
+        if value not in samples:
+            samples.append(value)
+        if len(samples) >= limit:
+            break
+    return ' | '.join(samples)
+
+
+def soil_dd_status(column_name, source_column, source_values, row_sources,
+                   metadata_sources, redundant_sources, structural_fields):
+    if column_name in structural_fields:
+        return 'data_dictionary_metadata'
+    if source_column in row_sources:
+        return 'used_in_berdl_data_table'
+    if source_column in metadata_sources:
+        return 'array_level_metadata'
+    if source_column in redundant_sources:
+        return 'redundant_to_typed_unit'
+    if source_values is None:
+        return 'unused_no_source_column'
+    if not nonempty_source_values(source_values):
+        return 'unused_empty_source_column'
+    return 'unused_not_selected_for_berdl'
+
+
+def write_soil_dd_bervo(base_dir, field_mappings, row_sources, metadata_sources,
+                        redundant_sources, source_tables):
+    """Regenerate soil_metagenomes/dd_bervo.csv from dd.csv plus local mappings."""
+    dd_path = base_dir / 'soil_metagenomes' / 'dd.csv'
+    out_path = base_dir / 'soil_metagenomes' / 'dd_bervo.csv'
+    structural_fields = {
+        'file_name', 'file_description', 'standard', 'column_or_row_name',
+        'unit', 'definition', 'data_type', 'missing_value_code'
+    }
+    values_by_column, files_by_column = collect_soil_source_metadata(source_tables)
+    written_source_columns = set()
+
+    fieldnames = [
+        'column_or_row_name', 'BERVO Combination', 'BERVO Term',
+        'unit', 'definition', 'data_type', 'source_file', 'berdl_export_status',
+        'nonempty_value_count', 'sample_values', 'mapping_notes',
+        'proposed_bervo_term'
+    ]
+
+    def build_output_row(row, *, source_column=None):
+        col = row['column_or_row_name']
+        source_column = source_column or SOIL_DD_SOURCE_ALIASES.get(col, col)
+        written_source_columns.add(source_column)
+        mapping = field_mappings.get(col) or field_mappings.get(source_column)
+        if col in structural_fields:
+            combo = 'unnecessary?'
+            term = ''
+        elif mapping:
+            combo, term = mapping
+        else:
+            combo = ''
+            term = ''
+
+        values = values_by_column.get(source_column)
+        cleaned_values = nonempty_source_values(values or [])
+        status = soil_dd_status(
+            col, source_column, values, row_sources, metadata_sources,
+            redundant_sources, structural_fields
+        )
+        notes, proposed_term = SOIL_MAPPING_REVIEW.get(col) or SOIL_MAPPING_REVIEW.get(source_column) or ('', '')
+        if status != 'used_in_berdl':
+            notes = ''
+            proposed_term = ''
+
+        return {
+            'column_or_row_name': col,
+            'BERVO Combination': normalize_bervo_curie(combo),
+            'BERVO Term': normalize_bervo_curie(term),
+            'unit': SOIL_INFERRED_UNITS.get(col, SOIL_INFERRED_UNITS.get(source_column, normalize_missing_value(row.get('unit', '')))),
+            'definition': row.get('definition', ''),
+            'data_type': row.get('data_type', ''),
+            'source_file': ';'.join(sorted(files_by_column.get(source_column, []))),
+            'berdl_export_status': status,
+            'nonempty_value_count': len(cleaned_values) if values is not None else '',
+            'sample_values': sample_source_values(values or []) if status in {
+                'used_in_berdl_data_table',
+                'array_level_metadata',
+                'redundant_to_typed_unit',
+            } else '',
+            'mapping_notes': notes,
+            'proposed_bervo_term': proposed_term,
+        }
+
+    with dd_path.open('r', encoding='utf-8-sig', newline='') as in_f, out_path.open('w', encoding='utf-8', newline='') as out_f:
+        reader = csv.DictReader(in_f)
+        writer = csv.DictWriter(out_f, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in reader:
+            writer.writerow(build_output_row(row))
+
+        documented_sources = written_source_columns | set(SOIL_DD_SOURCE_ALIASES.values())
+        documented_review_sources = row_sources | metadata_sources | redundant_sources
+        for source_column in sorted(documented_review_sources - documented_sources):
+            definition, data_type = SOIL_DD_EXTRA_SOURCE_DEFINITIONS.get(source_column, ('', 'text'))
+            writer.writerow(build_output_row({
+                'column_or_row_name': source_column,
+                'unit': SOIL_INFERRED_UNITS.get(source_column, ''),
+                'definition': definition,
+                'data_type': data_type,
+            }, source_column=source_column))
+
+
+def write_generic_ontologized_table(dataset_id, records, specs, output_dir,
+                                    description, metadata_items,
+                                    table_type_id, table_type_name):
+    """Write TSV, schema.py, ddt_ndarray.tsv, and sys_ddt_typedef.tsv for one table."""
+    uo_terms = load_uo_terms()
+    used_names = set()
+    column_specs = []
+
+    for spec in specs:
+        dim_number = spec.get('dimension_number') or ''
+        dim_prefix = ''
+        if dim_number:
+            dim_prefix = SOIL_DIMENSIONS[int(dim_number)][2]
+        candidate = spec.get('output_name') or bervo_combination_to_column_name(
+            spec['combination'], spec.get('unit', ''), dim_prefix, uo_terms
+        )
+        new_name = ensure_unique_column_name(candidate, used_names, spec['source'])
+        spec = dict(spec)
+        spec['berdl_column_name'] = new_name
+        column_specs.append(spec)
+
+    tsv_path = output_dir / f"{dataset_id}.tsv"
+    with tsv_path.open('w', newline='', encoding='utf-8') as f:
+        fieldnames = [spec['berdl_column_name'] for spec in column_specs]
+        writer = csv.DictWriter(f, fieldnames=fieldnames, delimiter='\t')
+        writer.writeheader()
+        for record in records:
+            out_row = {}
+            for spec in column_specs:
+                transform = spec.get('transform')
+                if transform:
+                    value = transform(record)
+                else:
+                    value = record.get(spec['source'], '')
+                out_row[spec['berdl_column_name']] = normalize_missing_value(value)
+            writer.writerow(out_row)
+
+    schema_fields = []
+    sys_typedef_rows = []
+    variable_counter = 0
+    dimension_counters = {}
+    dimension_ids_by_number = {}
+    dimension_names_by_number = {}
+    dimension_variable_ids = {}
+    dimension_variable_names = {}
+    variable_ids = []
+    variable_names = []
+
+    for spec in column_specs:
+        dim_number = spec.get('dimension_number') or ''
+        if dim_number:
+            dim_number = int(dim_number)
+            dimension_counters[dim_number] = dimension_counters.get(dim_number, 0) + 1
+            var_number = dimension_counters[dim_number]
+            data_type = 'dimension_variable'
+            dim_oterm_id, dim_oterm_name, _ = SOIL_DIMENSIONS[dim_number]
+            dimension_ids_by_number[dim_number] = dim_oterm_id
+            dimension_names_by_number[dim_number] = dim_oterm_name
+            dimension_variable_ids.setdefault(dim_number, []).append(spec['term'])
+            dimension_variable_names.setdefault(dim_number, []).append(primary_term_name(spec['combination']))
+        else:
+            variable_counter += 1
+            var_number = variable_counter
+            data_type = 'variable'
+            dim_oterm_id = ''
+            dim_oterm_name = ''
+            variable_ids.append(spec['term'])
+            variable_names.append(primary_term_name(spec['combination']))
+
+        unit_str = spec.get('unit', '')
+        uo_term = map_unit_to_uo(unit_str) if unit_str else ''
+        unit_name = get_typedef_unit_name(unit_str, uo_terms)
+        comment_text = expand_comment_units(spec['combination'])
+        schema_fields.append({
+            'name': spec['berdl_column_name'],
+            'spark_type': spec['spark_type'],
+            'comment': build_schema_comment(comment_text, unit_name)
+        })
+        sys_typedef_rows.append({
+            'ddt_ndarray_id': dataset_id,
+            'berdl_column_name': spec['berdl_column_name'],
+            'berdl_column_data_type': data_type,
+            'scalar_type': spark_type_to_scalar_type(spec['spark_type']),
+            'foreign_key': '',
+            'comment': comment_text,
+            'unit_sys_oterm_id': uo_term or '',
+            'unit_sys_oterm_name': unit_name,
+            'dimension_number': dim_number or '',
+            'dimension_oterm_id': dim_oterm_id,
+            'dimension_oterm_name': dim_oterm_name,
+            'variable_number': var_number,
+            'variable_oterm_id': spec['term'],
+            'variable_oterm_name': primary_term_name(spec['combination']),
+            'original_description': spec.get('original_description', '')
+        })
+
+    schema_path = output_dir / f"{dataset_id}_schema.py"
+    with schema_path.open('w', encoding='utf-8') as f:
+        f.writelines(build_schema_lines(schema_fields))
+
+    dimension_numbers = sorted(dimension_ids_by_number)
+    unique_variable_ids = []
+    unique_variable_names = []
+    for term_id, term_name in zip(variable_ids, variable_names):
+        if term_id not in unique_variable_ids:
+            unique_variable_ids.append(term_id)
+            unique_variable_names.append(term_name)
+
+    ddt_row = {
+        'ddt_ndarray_id': dataset_id,
+        'ddt_ndarray_name': build_ddt_name(dataset_id),
+        'ddt_ndarray_description': description,
+        'ddt_ndarray_metadata': json_cell(metadata_items),
+        'ddt_ndarray_type_sys_oterm_id': table_type_id,
+        'ddt_ndarray_type_sys_oterm_name': table_type_name,
+        'ddt_ndarray_shape': f'[{len(records)}]',
+        'ddt_ndarray_dimension_types_sys_oterm_id': json_cell([dimension_ids_by_number[n] for n in dimension_numbers]),
+        'ddt_ndarray_dimension_types_sys_oterm_name': json_cell([dimension_names_by_number[n] for n in dimension_numbers]),
+        'ddt_ndarray_dimension_variable_types_sys_oterm_id': json_cell([dimension_variable_ids[n] for n in dimension_numbers]),
+        'ddt_ndarray_dimension_variable_types_sys_oterm_name': json_cell([dimension_variable_names[n] for n in dimension_numbers]),
+        'ddt_ndarray_variable_types_sys_oterm_id': json_cell(unique_variable_ids),
+        'ddt_ndarray_variable_types_sys_oterm_name': json_cell(unique_variable_names),
+        'withdrawn_date': '',
+        'superceded_by_ddt_ndarray_id': ''
+    }
+
+    ddt_ndarray_path = output_dir / f"{dataset_id}_ddt_ndarray.tsv"
+    with ddt_ndarray_path.open('w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=DDT_NDARRAY_FIELDNAMES, delimiter='\t')
+        writer.writeheader()
+        writer.writerow(normalize_bervo_value(ddt_row))
+
+    sys_typedef_path = output_dir / f"{dataset_id}_sys_ddt_typedef.tsv"
+    with sys_typedef_path.open('w', newline='', encoding='utf-8') as f:
+        writer = csv.DictWriter(f, fieldnames=TYPEDEF_FIELDNAMES, delimiter='\t')
+        writer.writeheader()
+        writer.writerows([normalize_bervo_value(row) for row in sys_typedef_rows])
+
+    print(f"✓ Created {dataset_id}:")
+    print(f"  - {tsv_path.name} ({len(records)} records, {len(column_specs)} columns)")
+    print(f"  - {schema_path.name}")
+    print(f"  - {ddt_ndarray_path.name}")
+    print(f"  - {sys_typedef_path.name}")
+
+
+def derive_mag_manifest_records(soil_dir):
+    """Build a manifest of MAG FASTA files without extracting sequence contents."""
+    records = []
+    repo_dir = soil_dir.parent
+    for archive_path in sorted(soil_dir.glob('neon_genomes*_tar.gz')):
+        with tarfile.open(archive_path, 'r:gz') as tar:
+            for member in tar.getmembers():
+                if not member.isfile() or not member.name.lower().endswith(('.fa', '.fasta', '.fna')):
+                    continue
+                file_name = Path(member.name).name
+                stem = re.sub(r'\.(fa|fasta|fna)$', '', file_name, flags=re.IGNORECASE)
+                method = ''
+                genome_id = stem
+                if '.' in stem and not stem.split('.', 1)[0].isdigit():
+                    method, genome_id = stem.split('.', 1)
+                records.append({
+                    'archive_file_name': archive_path.name,
+                    'archive_file_path': str(archive_path.relative_to(repo_dir)),
+                    'genome_collection': Path(member.name).parts[0] if Path(member.name).parts else '',
+                    'genome_binning_method': method,
+                    'genome_identifier': genome_id,
+                    'sequence_file_name': file_name,
+                    'sequence_file_path': member.name,
+                    'sequence_file_size_bytes': member.size,
+                })
+    return records
+
+
+def convert_soil_metagenomes(base_dir, output_dir):
+    """Convert soil metagenome metadata and MAG archive manifests to ontologized tables."""
+    soil_dir = base_dir / 'soil_metagenomes'
+    definitions, _, _ = load_dd_definitions(soil_dir / 'dd.csv')
+    field_mappings = get_soil_mapping_definitions()
+
+    nmdc_records, _ = read_csv_records(soil_dir / 'neon_Gs0149986_samples_soilproperties_metagenomes.csv')
+    samples_records, _ = read_csv_records(soil_dir / 'samples.csv', skip_rows=1)
+    mag_records = derive_mag_manifest_records(soil_dir)
+
+    def desc(source, extra=''):
+        base = definitions.get(source, '')
+        return f"{extra} {base}".strip() if extra else base
+
+    nmdc_specs = [
+        make_spec('sample name', *field_mappings['sample name'], dimension_number=1, output_name='environmental_sample_identifier', original_description=desc('sample name')),
+        make_spec('source material identifier', *field_mappings['source material identifier'], dimension_number=1, output_name='environmental_sample_source_material_identifier', original_description=desc('source material identifier')),
+        make_spec('analysis/data type', *field_mappings['analysis/data type'], dimension_number=1, output_name='environmental_sample_analysis_data_type', original_description=desc('analysis/data type')),
+        make_spec('environmental medium', *field_mappings['environmental medium'], dimension_number=1, output_name='environmental_sample_material', original_description=desc('environmental medium')),
+        make_spec('depth, meters', 'Depth, Context = sample interval start', 'BERVO:8000069', dimension_number=1, unit='meter', spark_type='DoubleType', transform=lambda row: parse_depth_start(row.get('depth, meters')), output_name='environmental_sample_depth_start_meter', original_description=desc('depth, meters', 'Derived interval start.')),
+        make_spec('depth, meters', 'Depth, Context = sample interval end', 'BERVO:8000069', dimension_number=1, unit='meter', spark_type='DoubleType', transform=lambda row: parse_depth_end(row.get('depth, meters')), output_name='environmental_sample_depth_end_meter', original_description=desc('depth, meters', 'Derived interval end.')),
+        make_spec('growth facility', *field_mappings['growth facility'], dimension_number=1, output_name='environmental_sample_growth_facility', original_description=desc('growth facility')),
+        make_spec('storage conditions', *field_mappings['storage conditions'], dimension_number=1, output_name='environmental_sample_storage_condition', original_description=desc('storage conditions')),
+        make_spec('broad-scale environmental context', *field_mappings['broad-scale environmental context'], dimension_number=2, output_name='location_environmental_feature_broad_scale', original_description=desc('broad-scale environmental context')),
+        make_spec('local environmental context', *field_mappings['local environmental context'], dimension_number=2, output_name='location_environmental_feature_local', original_description=desc('local environmental context')),
+        make_spec('ecosystem', *field_mappings['ecosystem'], dimension_number=2, output_name='location_ecosystem', original_description=desc('ecosystem')),
+        make_spec('ecosystem_category', *field_mappings['ecosystem_category'], dimension_number=2, output_name='location_ecosystem_category', original_description=desc('ecosystem_category')),
+        make_spec('ecosystem_type', *field_mappings['ecosystem_type'], dimension_number=2, output_name='location_ecosystem_type', original_description=desc('ecosystem_type')),
+        make_spec('ecosystem_subtype', *field_mappings['ecosystem_subtype'], dimension_number=2, output_name='location_ecosystem_subtype', original_description=desc('ecosystem_subtype')),
+        make_spec('specific_ecosystem', *field_mappings['specific_ecosystem'], dimension_number=2, output_name='location_specific_ecosystem', original_description=desc('specific_ecosystem')),
+        make_spec('geographic location (country and/or sea,region)', *field_mappings['geographic location (country and/or sea,region)'], dimension_number=2, output_name='location_geographic_region', original_description=desc('geographic location (country and/or sea,region)')),
+        make_spec('geographic location (latitude and longitude)', 'Latitude', 'BERVO:8000395', dimension_number=2, unit='degree', spark_type='DoubleType', transform=lambda row: parse_latitude(row.get('geographic location (latitude and longitude)')), output_name='location_latitude_degree', original_description=desc('geographic location (latitude and longitude)', 'Derived latitude in decimal degrees.')),
+        make_spec('geographic location (latitude and longitude)', 'Longitude', 'BERVO:8000396', dimension_number=2, unit='degree', spark_type='DoubleType', transform=lambda row: parse_longitude(row.get('geographic location (latitude and longitude)')), output_name='location_longitude_degree', original_description=desc('geographic location (latitude and longitude)', 'Derived longitude in decimal degrees.')),
+        make_spec('elevation, meters', *field_mappings['elevation, meters'], dimension_number=2, unit='meter', spark_type='DoubleType', output_name='location_altitude_meter', original_description=desc('elevation, meters')),
+        make_spec('collection date', *field_mappings['collection date'], dimension_number=3, output_name='time_collection_date', original_description=desc('collection date')),
+        make_spec('sample storage temperature', *field_mappings['sample storage temperature'], unit='degree Celsius', spark_type='DoubleType', transform=lambda row: parse_first_float(row.get('sample storage temperature')), output_name='sample_storage_temperature_degree_celsius', original_description=desc('sample storage temperature')),
+        make_spec('water content', *field_mappings['water content'], unit='percent', spark_type='DoubleType', transform=lambda row: parse_first_float(row.get('water content')), output_name='volumetric_water_content_percent', original_description=desc('water content', 'Reported as percent water-filled pore space.')),
+        make_spec('water content method', *field_mappings['water content method'], output_name='volumetric_water_content_method', original_description=desc('water content method')),
+        make_spec('pH', *field_mappings['pH'], unit='pH', spark_type='DoubleType', output_name='ph', original_description=desc('pH')),
+        make_spec('pH method', *field_mappings['pH method'], output_name='ph_method', original_description=desc('pH method')),
+        make_spec('microbial biomass carbon', *field_mappings['microbial biomass carbon'], unit='milligram per kilogram', spark_type='DoubleType', transform=lambda row: parse_first_float(row.get('microbial biomass carbon')), output_name='microbial_biomass_carbon_milligram_per_kilogram', original_description=desc('microbial biomass carbon', 'Reported as microgram carbon per gram dry soil; stored as equivalent milligram per kilogram.')),
+        make_spec('microbial biomass carbon method', *field_mappings['microbial biomass carbon method'], output_name='microbial_biomass_carbon_method', original_description=desc('microbial biomass carbon method')),
+        make_spec('microbial biomass nitrogen', *field_mappings['microbial biomass nitrogen'], unit='milligram per kilogram', spark_type='DoubleType', transform=lambda row: parse_first_float(row.get('microbial biomass nitrogen')), output_name='microbial_biomass_nitrogen_milligram_per_kilogram', original_description=desc('microbial biomass nitrogen', 'Reported as microgram nitrogen per gram dry soil; stored as equivalent milligram per kilogram.')),
+        make_spec('microbial biomass nitrogen method', *field_mappings['microbial biomass nitrogen method'], output_name='microbial_biomass_nitrogen_method', original_description=desc('microbial biomass nitrogen method')),
+        make_spec('ammonium nitrogen', *field_mappings['ammonium nitrogen'], unit='milligram per kilogram', spark_type='DoubleType', transform=lambda row: parse_first_float(row.get('ammonium nitrogen')), output_name='ammonium_nitrogen_milligram_per_kilogram', original_description=desc('ammonium nitrogen', 'Reported as microgram per gram; inferred as microgram nitrogen per gram dry soil and stored as equivalent milligram per kilogram.')),
+        make_spec('nitrate_nitrogen', *field_mappings['nitrate_nitrogen'], unit='milligram per kilogram', spark_type='DoubleType', transform=lambda row: parse_first_float(row.get('nitrate_nitrogen')), output_name='nitrate_nitrogen_milligram_per_kilogram', original_description=desc('nitrate_nitrogen', 'Reported as microgram per gram; inferred as microgram nitrogen per gram dry soil and stored as equivalent milligram per kilogram.')),
+    ]
+
+    sample_specs = [
+        make_spec('Sample Name', *field_mappings['Sample Name'], dimension_number=1, output_name='environmental_sample_identifier', original_description=desc('Sample Name')),
+        make_spec('IGSN', *field_mappings['IGSN'], dimension_number=1, output_name='environmental_sample_igsn_identifier', original_description=desc('IGSN')),
+        make_spec('Material', *field_mappings['Material'], dimension_number=1, output_name='environmental_sample_material', original_description='Material of the collected sample.'),
+        make_spec('Description', *field_mappings['Description'], dimension_number=1, output_name='environmental_sample_description', original_description='Free-text description of the collected sample.'),
+        make_spec('Collection method', *field_mappings['Collection method'], dimension_number=1, output_name='environmental_sample_collection_method', original_description=desc('Collection method')),
+        make_spec('Depth in core max', *field_mappings['Depth in core max'], dimension_number=1, unit='meter', spark_type='DoubleType', output_name='environmental_sample_core_depth_max_meter', original_description=desc('Depth in core max')),
+        make_spec('Depth scale', *field_mappings['Depth scale'], dimension_number=1, output_name='environmental_sample_depth_scale', original_description=desc('Depth scale')),
+        make_spec('Latitude', *field_mappings['Latitude'], dimension_number=2, unit='degree', spark_type='DoubleType', output_name='location_latitude_degree', original_description=desc('Latitude', 'Decimal degrees.')),
+        make_spec('Longitude', *field_mappings['Longitude'], dimension_number=2, unit='degree', spark_type='DoubleType', output_name='location_longitude_degree', original_description=desc('Longitude', 'Decimal degrees.')),
+        make_spec('Navigation type', *field_mappings['Navigation type'], dimension_number=2, output_name='location_navigation_method', original_description=desc('Navigation type')),
+        make_spec('Primary Physiographic feature', *field_mappings['Primary Physiographic feature'], dimension_number=2, output_name='location_physiographic_feature', original_description=desc('Primary physiographic feature')),
+        make_spec('Location description', *field_mappings['Location description'], dimension_number=2, output_name='location_description', original_description='Description of the sample collection location.'),
+        make_spec('City/Township', *field_mappings['City/Township'], dimension_number=2, output_name='location_city', original_description='City or township associated with the sample.'),
+        make_spec('State/Province', *field_mappings['State/Province'], dimension_number=2, output_name='location_state_province', original_description='State or province associated with the sample.'),
+        make_spec('Country', *field_mappings['Country'], dimension_number=2, output_name='location_country', original_description=desc('Country')),
+        make_spec('Release Date', *field_mappings['Release Date'], dimension_number=3, output_name='time_release_date', original_description=desc('Release Date')),
+        make_spec('Collection date', *field_mappings['Collection date'], dimension_number=3, output_name='time_collection_datetime', original_description=desc('Collection date')),
+        make_spec('Field program/Cruise', *field_mappings['Field program/Cruise'], output_name='field_program_identifier', original_description=desc('Field program/cruise')),
+        make_spec('Collector/Chief Scientist', *field_mappings['Collector/Chief Scientist'], output_name='collector_identifier', original_description=desc('Collector/Chief Scientist')),
+        make_spec('Current Archive', *field_mappings['Current Archive'], output_name='current_archive_identifier', original_description='Current archive where the sample is held.'),
+        make_spec('Current archive contact', *field_mappings['Current archive contact'], output_name='current_archive_contact_identifier', original_description='Contact for the current sample archive.'),
+    ]
+
+    mag_specs = [
+        make_spec('archive_file_name', 'Identifier, Context = genome archive file name', 'BERVO:8000528', dimension_number=4, output_name='genome_archive_file_name', original_description='Name of the downloaded tar.gz archive containing MAG FASTA files.'),
+        make_spec('archive_file_path', 'Identifier, Context = genome archive file path', 'BERVO:8000528', dimension_number=4, output_name='genome_archive_file_path', original_description='Repo-relative path to the downloaded tar.gz archive containing MAG FASTA files.'),
+        make_spec('genome_collection', 'Identifier, Context = genome collection', 'BERVO:8000528', dimension_number=4, output_name='genome_collection_identifier', original_description='Top-level collection directory inside the MAG archive.'),
+        make_spec('genome_binning_method', 'Method, Context = genome binning', 'BERVO:8000303', dimension_number=4, output_name='genome_binning_method', original_description='Genome binning method inferred from the FASTA filename prefix when present.'),
+        make_spec('genome_identifier', 'Identifier, Context = genome', 'BERVO:8000528', dimension_number=4, output_name='genome_identifier', original_description='Genome identifier inferred from the FASTA filename.'),
+        make_spec('sequence_file_name', 'Identifier, Context = sequence file name', 'BERVO:8000528', dimension_number=4, output_name='genome_sequence_file_name', original_description='FASTA file name inside the MAG archive.'),
+        make_spec('sequence_file_path', 'Identifier, Context = sequence file path', 'BERVO:8000528', dimension_number=4, output_name='genome_sequence_file_path', original_description='FASTA member path inside the MAG archive. Sequence contents are not imported.'),
+        make_spec('sequence_file_size_bytes', 'Size, Context = sequence file', 'BERVO:8000350', unit='byte', spark_type='IntegerType', output_name='genome_sequence_file_size_byte', original_description='Uncompressed FASTA member size in bytes.'),
+    ]
+
+    nmdc_array_metadata_sources = SOIL_ARRAY_METADATA_SOURCES & {spec['source'] for spec in nmdc_specs}
+    sample_array_metadata_sources = SOIL_ARRAY_METADATA_SOURCES & {spec['source'] for spec in sample_specs}
+    redundant_sources = SOIL_REDUNDANT_SOURCES & {spec['source'] for spec in nmdc_specs + sample_specs}
+
+    nmdc_specs = [
+        spec for spec in nmdc_specs
+        if spec['source'] not in nmdc_array_metadata_sources
+    ]
+    sample_specs = [
+        spec for spec in sample_specs
+        if spec['source'] not in sample_array_metadata_sources
+        and spec['source'] not in redundant_sources
+    ]
+
+    def first_nonempty(records, source, transform=None):
+        for record in records:
+            value = transform(record) if transform else record.get(source, '')
+            value = normalize_missing_value(value)
+            if value != '':
+                return str(value)
+        return ''
+
+    common_metadata_items = [
+        ["Link, Context = dataset DOI <BERVO:8000391>", "10.15485/2587101"],
+        ["Location <BERVO:8000394>", "East River, CO"],
+        ["Date, Context = collection <BERVO:8000239>", "2018-06-14 to 2018-06-28"],
+    ]
+
+    nmdc_metadata_items = common_metadata_items + [
+        ["Environmental measurement, Context = analysis data type <BERVO:8000412>", first_nonempty(nmdc_records, 'analysis/data type')],
+        ["Environmental material <BERVO:8000402>", first_nonempty(nmdc_records, 'environmental medium')],
+        ["Depth, Context = sample interval start <BERVO:8000069>", f"{first_nonempty(nmdc_records, 'depth, meters', lambda row: parse_depth_start(row.get('depth, meters')))} meter"],
+        ["Depth, Context = sample interval end <BERVO:8000069>", f"{first_nonempty(nmdc_records, 'depth, meters', lambda row: parse_depth_end(row.get('depth, meters')))} meter"],
+        ["Environmental sample location, Context = growth facility <BERVO:8000514>", first_nonempty(nmdc_records, 'growth facility')],
+        ["Condition, Context = sample storage <BERVO:8000302>", first_nonempty(nmdc_records, 'storage conditions')],
+        ["Environmental feature, Context = broad scale <BERVO:8000400>", first_nonempty(nmdc_records, 'broad-scale environmental context')],
+        ["Environmental feature, Context = local <BERVO:8000400>", first_nonempty(nmdc_records, 'local environmental context')],
+        ["Ecosystem <BERVO:8000043>", first_nonempty(nmdc_records, 'ecosystem')],
+        ["Ecosystem, Context = category <BERVO:8000043>", first_nonempty(nmdc_records, 'ecosystem_category')],
+        ["Ecosystem, Context = type <BERVO:8000043>", first_nonempty(nmdc_records, 'ecosystem_type')],
+        ["Ecosystem, Context = subtype <BERVO:8000043>", first_nonempty(nmdc_records, 'ecosystem_subtype')],
+        ["Ecosystem, Context = specific <BERVO:8000043>", first_nonempty(nmdc_records, 'specific_ecosystem')],
+        ["Region, Context = geographic location <BERVO:8000519>", first_nonempty(nmdc_records, 'geographic location (country and/or sea,region)')],
+        ["Temperature, Context = sample storage <BERVO:8000133>", f"{first_nonempty(nmdc_records, 'sample storage temperature', lambda row: parse_first_float(row.get('sample storage temperature')))} degree Celsius"],
+        ["Method, Context = volumetric water content <BERVO:8000303>", first_nonempty(nmdc_records, 'water content method')],
+        ["Method, Context = pH <BERVO:8000303>", first_nonempty(nmdc_records, 'pH method')],
+        ["Method, Context = microbial biomass carbon <BERVO:8000303>", first_nonempty(nmdc_records, 'microbial biomass carbon method')],
+        ["Method, Context = microbial biomass nitrogen <BERVO:8000303>", first_nonempty(nmdc_records, 'microbial biomass nitrogen method')],
+    ]
+
+    sample_metadata_items = common_metadata_items + [
+        ["Environmental material <BERVO:8000402>", first_nonempty(samples_records, 'Material')],
+        ["Comment, Context = sample description <BERVO:8000305>", first_nonempty(samples_records, 'Description')],
+        ["Method, Context = sample collection <BERVO:8000303>", first_nonempty(samples_records, 'Collection method')],
+        ["Depth, Context = core maximum <BERVO:8000069>", f"{first_nonempty(samples_records, 'Depth in core max')} meter"],
+        ["Method, Context = navigation <BERVO:8000303>", first_nonempty(samples_records, 'Navigation type')],
+        ["Environmental feature, Context = physiographic <BERVO:8000400>", first_nonempty(samples_records, 'Primary Physiographic feature')],
+        ["Region, Context = city <BERVO:8000519>", first_nonempty(samples_records, 'City/Township')],
+        ["Region, Context = state <BERVO:8000519>", first_nonempty(samples_records, 'State/Province')],
+        ["Country <BERVO:8000398>", first_nonempty(samples_records, 'Country')],
+        ["Date, Context = release <BERVO:8000239>", first_nonempty(samples_records, 'Release Date')],
+        ["Identifier, Context = field program <BERVO:8000528>", first_nonempty(samples_records, 'Field program/Cruise')],
+        ["Identifier, Context = collector <BERVO:8000528>", first_nonempty(samples_records, 'Collector/Chief Scientist')],
+        ["Identifier, Context = archive <BERVO:8000528>", first_nonempty(samples_records, 'Current Archive')],
+        ["Identifier, Context = archive contact <BERVO:8000528>", first_nonempty(samples_records, 'Current archive contact')],
+    ]
+
+    mag_metadata_items = common_metadata_items + [
+        ["Environmental measurement, Context = analysis data type <BERVO:8000412>", "metagenomics"],
+        ["Comment, Context = sequence import policy <BERVO:8000305>", "MAG FASTA contents are not imported; archive member metadata are represented in the manifest table"],
+    ]
+
+    dd_review_sources = {spec['source'] for spec in nmdc_specs + sample_specs}
+    write_soil_dd_bervo(
+        base_dir,
+        field_mappings,
+        dd_review_sources,
+        nmdc_array_metadata_sources | sample_array_metadata_sources,
+        redundant_sources,
+        [
+            ('neon_Gs0149986_samples_soilproperties_metagenomes.csv', nmdc_records),
+            ('samples.csv', samples_records),
+        ],
+    )
+
+    write_generic_ontologized_table(
+        'soil_metagenomes_nmdc_soil_properties',
+        nmdc_records,
+        nmdc_specs,
+        output_dir,
+        'NMDC-compliant soil metagenome sample metadata and associated soil physical and chemical measurements from topsoils collected during the NEON 2018 East River campaign',
+        nmdc_metadata_items,
+        'BERVO:8000412',
+        'Environmental measurement'
+    )
+    write_generic_ontologized_table(
+        'soil_metagenomes_sample_metadata',
+        samples_records,
+        sample_specs,
+        output_dir,
+        'IGSN sample registration metadata for topsoil samples associated with the NEON 2018 East River metagenome-assembled genomes dataset',
+        sample_metadata_items,
+        'BERVO:8000342',
+        'Environmental sample'
+    )
+    write_generic_ontologized_table(
+        'soil_metagenomes_mag_manifest',
+        mag_records,
+        mag_specs,
+        output_dir,
+        'Manifest of MAG FASTA files packaged with the soil metagenomes dataset; sequence contents are intentionally excluded from BERDL import',
+        mag_metadata_items,
+        'BERVO:8000409',
+        'Genome'
+    )
 
 
 def convert_tdr_dataset(base_dir, output_dir):
@@ -859,7 +1830,7 @@ def convert_emi_dataset(base_dir, output_dir):
 
 
 def main():
-    base_dir = Path('/h/jmc/data/bioepic/chess')
+    base_dir = Path(__file__).resolve().parents[1]
     output_dir = base_dir / 'ontologized_datasets'
     output_dir.mkdir(exist_ok=True)
 
@@ -876,6 +1847,11 @@ def main():
     # Convert EMI dataset
     print("Converting EMI survey data...")
     convert_emi_dataset(base_dir, output_dir)
+    print()
+
+    # Convert soil metagenome metadata and MAG archive manifest.
+    print("Converting soil metagenome metadata...")
+    convert_soil_metagenomes(base_dir, output_dir)
     print()
 
     print("=" * 80)
