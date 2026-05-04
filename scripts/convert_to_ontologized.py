@@ -123,6 +123,11 @@ def map_unit_to_uo(unit_str):
         'meters': 'UO:0000008',
         'metre': 'UO:0000008',
         'metres': 'UO:0000008',
+        'cm': 'UO:0000015',
+        'centimeter': 'UO:0000015',
+        'centimeters': 'UO:0000015',
+        'centimetre': 'UO:0000015',
+        'centimetres': 'UO:0000015',
         'celsius': 'UO:0000027',
         'celsius (°c)': 'UO:0000027',
         '°c': 'UO:0000027',
@@ -447,6 +452,14 @@ SOIL_DIMENSIONS = {
 }
 
 
+FIELD_SAMPLING_DIMENSIONS = {
+    1: ('BERVO:8000342', 'Environmental sample', 'environmental_sample'),
+    2: ('BERVO:8000394', 'Location', 'location'),
+    3: ('BERVO:8000238', 'Time', 'time'),
+    4: ('BERVO:8000324', 'Taxon', 'taxon'),
+}
+
+
 SOIL_INFERRED_UNITS = {
     # The NMDC data dictionary leaves these as N/A, but the reported values
     # include units or have standard coordinate/depth units.
@@ -710,6 +723,45 @@ def make_spec(source, combination, term, *, dimension_number='', unit='',
     }
 
 
+def metadata_label_for_spec(spec):
+    """Build a metadata label from an ontologized column spec."""
+    combination = expand_comment_units(spec.get('combination', ''))
+    term = spec.get('term', '')
+    if term:
+        return f"{combination} <{term}>"
+    return combination
+
+
+def metadata_value_for_constant(value, spec, uo_terms):
+    """Include unit names for constant numeric metadata when a spec has units."""
+    unit_name = get_typedef_unit_name(spec.get('unit', ''), uo_terms)
+    if unit_name:
+        return f"{value} {unit_name}"
+    return value
+
+
+def transformed_spec_value(spec, record):
+    transform = spec.get('transform')
+    if transform:
+        value = transform(record)
+    else:
+        value = record.get(spec['source'], '')
+    return normalize_missing_value(value)
+
+
+def constant_spec_value(records, spec):
+    """Return the value when every record has the same non-empty spec value."""
+    if not records:
+        return None
+    values = [transformed_spec_value(spec, record) for record in records]
+    if any(value == '' for value in values):
+        return None
+    unique_values = {str(value) for value in values}
+    if len(unique_values) != 1:
+        return None
+    return str(values[0])
+
+
 def get_soil_mapping_definitions():
     """Mappings for soil metagenome metadata fields that are imported or documented."""
     return {
@@ -842,8 +894,15 @@ def nonempty_source_values(values):
         normalized = normalize_missing_value(value)
         if normalized == '':
             continue
-        cleaned.append(str(normalized).strip().replace('\n', ' ').replace('\r', ' '))
+        cleaned.append(clean_text(normalized))
     return cleaned
+
+
+def clean_text(value):
+    """Normalize source text for metadata cells."""
+    if value is None:
+        value = ''
+    return re.sub(r'\s+', ' ', str(value)).strip()
 
 
 def sample_source_values(values, limit=5):
@@ -957,9 +1016,12 @@ def write_soil_dd_bervo(base_dir, field_mappings, row_sources, metadata_sources,
 
 def write_generic_ontologized_table(dataset_id, records, specs, output_dir,
                                     description, metadata_items,
-                                    table_type_id, table_type_name):
+                                    table_type_id, table_type_name,
+                                    dimensions=None):
     """Write TSV, schema.py, ddt_ndarray.tsv, and sys_ddt_typedef.tsv for one table."""
     uo_terms = load_uo_terms()
+    dimensions = dimensions or SOIL_DIMENSIONS
+    metadata_items = list(metadata_items)
     used_names = set()
     column_specs = []
 
@@ -967,7 +1029,7 @@ def write_generic_ontologized_table(dataset_id, records, specs, output_dir,
         dim_number = spec.get('dimension_number') or ''
         dim_prefix = ''
         if dim_number:
-            dim_prefix = SOIL_DIMENSIONS[int(dim_number)][2]
+            dim_prefix = dimensions[int(dim_number)][2]
         candidate = spec.get('output_name') or bervo_combination_to_column_name(
             spec['combination'], spec.get('unit', ''), dim_prefix, uo_terms
         )
@@ -975,6 +1037,18 @@ def write_generic_ontologized_table(dataset_id, records, specs, output_dir,
         spec = dict(spec)
         spec['berdl_column_name'] = new_name
         column_specs.append(spec)
+
+    retained_column_specs = []
+    for spec in column_specs:
+        constant_value = constant_spec_value(records, spec)
+        if constant_value is not None:
+            metadata_items.append([
+                metadata_label_for_spec(spec),
+                metadata_value_for_constant(constant_value, spec, uo_terms),
+            ])
+        else:
+            retained_column_specs.append(spec)
+    column_specs = retained_column_specs
 
     tsv_path = output_dir / f"{dataset_id}.tsv"
     with tsv_path.open('w', newline='', encoding='utf-8') as f:
@@ -984,12 +1058,7 @@ def write_generic_ontologized_table(dataset_id, records, specs, output_dir,
         for record in records:
             out_row = {}
             for spec in column_specs:
-                transform = spec.get('transform')
-                if transform:
-                    value = transform(record)
-                else:
-                    value = record.get(spec['source'], '')
-                out_row[spec['berdl_column_name']] = normalize_missing_value(value)
+                out_row[spec['berdl_column_name']] = transformed_spec_value(spec, record)
             writer.writerow(out_row)
 
     schema_fields = []
@@ -1010,7 +1079,7 @@ def write_generic_ontologized_table(dataset_id, records, specs, output_dir,
             dimension_counters[dim_number] = dimension_counters.get(dim_number, 0) + 1
             var_number = dimension_counters[dim_number]
             data_type = 'dimension_variable'
-            dim_oterm_id, dim_oterm_name, _ = SOIL_DIMENSIONS[dim_number]
+            dim_oterm_id, dim_oterm_name, _ = dimensions[dim_number]
             dimension_ids_by_number[dim_number] = dim_oterm_id
             dimension_names_by_number[dim_number] = dim_oterm_name
             dimension_variable_ids.setdefault(dim_number, []).append(spec['term'])
@@ -1098,6 +1167,508 @@ def write_generic_ontologized_table(dataset_id, records, specs, output_dir,
     print(f"  - {schema_path.name}")
     print(f"  - {ddt_ndarray_path.name}")
     print(f"  - {sys_typedef_path.name}")
+
+
+def load_field_metadata_key(field_dir):
+    """Load the 2018 field-sampling metadata_column_key.csv as a source dictionary."""
+    rows = []
+    by_key = {}
+    with (field_dir / 'metadata_column_key.csv').open('r', encoding='utf-8-sig', newline='') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            csv_name = clean_text(row.get('csv', '')).removesuffix('.csv')
+            column = clean_text(row.get('column', ''))
+            description = clean_text(row.get('description', ''))
+            normalized = {
+                'csv': csv_name,
+                'column': column,
+                'description': description,
+            }
+            rows.append(normalized)
+            by_key[(csv_name, column)] = description
+    return rows, by_key
+
+
+def field_description(metadata_key, csv_name, column, fallback=''):
+    description = metadata_key.get((csv_name, column), '')
+    return description or fallback or column
+
+
+def load_sampling_area_lookup(field_dir):
+    lookup = {}
+    with (field_dir / 'sampling_area.csv').open('r', encoding='utf-8-sig', newline='') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            code = clean_text(row.get('ShortName', ''))
+            if not code:
+                continue
+            lookup[code] = {
+                'full_name': clean_text(row.get('FullName', '')),
+                'state': clean_text(row.get('State', '')),
+                'country': clean_text(row.get('Country', '')),
+            }
+    return lookup
+
+
+def sampling_area_full_name(row, sampling_areas):
+    return sampling_area_field(row, sampling_areas, 'full_name')
+
+
+def sampling_area_field(row, sampling_areas, field_name):
+    code = clean_text(normalize_missing_value(row.get('SamplingArea', '')))
+    if not code:
+        return ''
+    return sampling_areas.get(code, {}).get(field_name) or ''
+
+
+def load_species_lookup(field_dir):
+    """Return cover-code lookups resolved to species-list metadata."""
+    lookup = {}
+    lower_lookup = {}
+
+    def clean_taxon_value(value):
+        value = clean_text(value)
+        return '' if value.upper() == 'NA' else value
+
+    def add_lookup(code, detail):
+        if not code:
+            return
+        lookup[code] = detail
+        lower_lookup[code.lower()] = detail
+
+    with (field_dir / 'species_list.csv').open('r', encoding='utf-8-sig', newline='') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            cover_code = clean_text(row.get('CoverCode', ''))
+            alt_code = clean_text(row.get('AltFieldCode', ''))
+            detail = {
+                'cover_code': cover_code,
+                'family': clean_taxon_value(row.get('Family', '')),
+                'genus': clean_taxon_value(row.get('Genus', '')),
+                'species': clean_taxon_value(row.get('Species', '')),
+                'alt_field_code': alt_code,
+                'notes': clean_text(row.get('Notes', '')),
+            }
+
+            add_lookup(cover_code, detail)
+            add_lookup(alt_code, detail)
+
+    # Obvious one-off field-code variants seen in fractional_cover.csv.
+    if 'Gooseberry' in lookup:
+        ribes = dict(lookup['Gooseberry'])
+        ribes['cover_code'] = 'RibMon'
+        base_note = ribes.get('notes', '')
+        ribes['notes'] = f"{base_note}; species-list mapping inferred from Gooseberry code" if base_note else 'species-list mapping inferred from Gooseberry code'
+        add_lookup('RibMon', ribes)
+    if 'Raspberry' in lookup:
+        rubus = dict(lookup['Raspberry'])
+        rubus['cover_code'] = 'RubIda'
+        base_note = rubus.get('notes', '')
+        rubus['notes'] = f"{base_note}; species-list mapping inferred from Raspberry code" if base_note else 'species-list mapping inferred from Raspberry code'
+        add_lookup('RubIda', rubus)
+    return lookup, lower_lookup
+
+
+def cover_label(row, species_lookup, species_lower_lookup):
+    detail = cover_detail(row, species_lookup, species_lower_lookup)
+    if not detail:
+        return clean_text(normalize_missing_value(row.get('CoverCode', '')))
+    taxon_parts = [detail.get('genus', ''), detail.get('species', '')]
+    taxon_label = ' '.join(part for part in taxon_parts if part)
+    return taxon_label or detail.get('family') or detail.get('notes') or clean_text(normalize_missing_value(row.get('CoverCode', '')))
+
+
+def cover_detail(row, species_lookup, species_lower_lookup):
+    code = clean_text(normalize_missing_value(row.get('CoverCode', '')))
+    if not code:
+        return {}
+    return (
+        species_lookup.get(code)
+        or species_lower_lookup.get(code.lower())
+        or {}
+    )
+
+
+def cover_detail_value(row, species_lookup, species_lower_lookup, field_name):
+    if field_name == 'source_cover_code':
+        return clean_text(normalize_missing_value(row.get('CoverCode', '')))
+    return cover_detail(row, species_lookup, species_lower_lookup).get(field_name, '')
+
+
+def field_sampling_date(row):
+    year = clean_text(normalize_missing_value(row.get('Year', '')))
+    month = clean_text(normalize_missing_value(row.get('Month', '')))
+    day = clean_text(normalize_missing_value(row.get('Day', '')))
+    if not (year and month and day):
+        return ''
+    try:
+        return f"{int(year):04d}-{int(month):02d}-{int(day):02d}"
+    except ValueError:
+        return ''
+
+
+def fractional_collection_date(row):
+    value = clean_text(normalize_missing_value(row.get('CollectionDate', '')))
+    if not value:
+        return ''
+    parts = value.split('/')
+    if len(parts) != 3:
+        return value
+    try:
+        month, day, year = (int(part) for part in parts)
+    except ValueError:
+        return value
+    if year < 100:
+        year += 2000
+    return f"{year:04d}-{month:02d}-{day:02d}"
+
+
+def date_range(records, date_func):
+    dates = sorted({date_func(record) for record in records if date_func(record)})
+    if not dates:
+        return ''
+    if len(dates) == 1:
+        return dates[0]
+    return f"{dates[0]} to {dates[-1]}"
+
+
+def sample_site_area_lookup(sample_site_records, sampling_areas):
+    lookup = {}
+    for record in sample_site_records:
+        sample_id = clean_text(normalize_missing_value(record.get('SampleSiteCode', '')))
+        if sample_id and sample_id not in lookup:
+            area_code = clean_text(normalize_missing_value(record.get('SamplingArea', '')))
+            lookup[sample_id] = sampling_areas.get(area_code, {})
+    return lookup
+
+
+def sample_site_sampling_area_field(row, sample_site_areas, field_name):
+    sample_id = clean_text(normalize_missing_value(row.get('SampleSiteCode', '')))
+    return sample_site_areas.get(sample_id, {}).get(field_name, '')
+
+
+def combined_fractional_note(row):
+    notes = [
+        clean_text(normalize_missing_value(row.get('Note', ''))),
+        clean_text(normalize_missing_value(row.get('', ''))),
+    ]
+    return '; '.join(note for note in notes if note)
+
+
+def first_constant(records, source):
+    values = sorted({
+        clean_text(normalize_missing_value(record.get(source, '')))
+        for record in records
+        if clean_text(normalize_missing_value(record.get(source, '')))
+    })
+    return values[0] if len(values) == 1 else ''
+
+
+def sample_transformed_values(records, transform, limit=5):
+    values = []
+    for record in records:
+        value = clean_text(normalize_missing_value(transform(record)))
+        if not value or value in values:
+            continue
+        values.append(value)
+        if len(values) >= limit:
+            break
+    return ' | '.join(values)
+
+
+def write_field_sampling_dd_bervo(field_dir, metadata_rows, source_tables,
+                                  field_mappings, status_overrides,
+                                  sample_transforms):
+    """Write a reviewable BERVO mapping file from metadata_column_key.csv."""
+    out_path = field_dir / 'dd_bervo.csv'
+    fieldnames = [
+        'csv', 'column', 'BERVO Combination', 'BERVO Term', 'unit',
+        'definition', 'data_type', 'source_file', 'berdl_export_status',
+        'nonempty_value_count', 'sample_values', 'mapping_notes',
+        'proposed_bervo_term'
+    ]
+
+    values_by_key = {}
+    for csv_name, records in source_tables.items():
+        for record in records:
+            for column, value in record.items():
+                if column is None:
+                    continue
+                values_by_key.setdefault((csv_name, column), []).append(value)
+    if ('sampling_area', 'ShortName') in values_by_key:
+        values_by_key[('sampling_area', 'SamplingArea')] = values_by_key[('sampling_area', 'ShortName')]
+    if ('fractional_cover', 'Note') in values_by_key:
+        values_by_key[('fractional_cover', 'Notes')] = values_by_key[('fractional_cover', 'Note')]
+
+    lookup_only_csvs = {'sampling_area', 'species_list'}
+
+    def row_status(csv_name, column, values):
+        if (csv_name, column) in status_overrides:
+            return status_overrides[(csv_name, column)]
+        if csv_name in lookup_only_csvs:
+            return 'lookup_only_not_imported'
+        if csv_name == 'CRBU2018_AOP_Crowns.geojson':
+            return 'unused_spatial_polygon_not_imported'
+        if values is not None and not nonempty_source_values(values):
+            return 'unused_empty_source_column'
+        return 'unused_not_selected_for_berdl'
+
+    with out_path.open('w', encoding='utf-8', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for metadata_row in metadata_rows:
+            csv_name = metadata_row['csv']
+            column = metadata_row['column']
+            key = (csv_name, column)
+            mapping = field_mappings.get(key, {})
+            values = values_by_key.get(key)
+            status = row_status(csv_name, column, values)
+            transform = sample_transforms.get(key)
+            sample_values = ''
+            if values is not None and status != 'unused_empty_source_column':
+                if transform:
+                    records = source_tables.get(csv_name, [])
+                    sample_values = sample_transformed_values(records, transform)
+                else:
+                    sample_values = sample_source_values(values)
+
+            writer.writerow({
+                'csv': csv_name,
+                'column': column,
+                'BERVO Combination': normalize_bervo_curie(mapping.get('combination', '')),
+                'BERVO Term': normalize_bervo_curie(mapping.get('term', '')),
+                'unit': mapping.get('unit', ''),
+                'definition': metadata_row['description'],
+                'data_type': mapping.get('data_type', ''),
+                'source_file': f"{csv_name}.csv" if csv_name and not csv_name.endswith('.geojson') else csv_name,
+                'berdl_export_status': status,
+                'nonempty_value_count': len(nonempty_source_values(values or [])) if values is not None else '',
+                'sample_values': sample_values,
+                'mapping_notes': mapping.get('notes', ''),
+                'proposed_bervo_term': mapping.get('proposed_bervo_term', ''),
+            })
+
+
+def convert_field_sampling_2018(base_dir, output_dir):
+    """Convert 2018 field sampling tables using lookup files as context."""
+    field_dir = base_dir / '2018_field_sampling'
+    metadata_rows, metadata_key = load_field_metadata_key(field_dir)
+    sampling_areas = load_sampling_area_lookup(field_dir)
+    species_lookup, species_lower_lookup = load_species_lookup(field_dir)
+
+    sample_site_records, _ = read_csv_records(field_dir / 'sample_site.csv')
+    fractional_records, _ = read_csv_records(field_dir / 'fractional_cover.csv')
+    rtk_records, _ = read_csv_records(field_dir / 'raw_rtk_gps_points.csv')
+    sample_site_areas = sample_site_area_lookup(sample_site_records, sampling_areas)
+
+    def desc(csv_name, column, fallback=''):
+        return field_description(metadata_key, csv_name, column, fallback)
+
+    def area_name(row):
+        return sampling_area_full_name(row, sampling_areas)
+
+    def rtk_area_name(row):
+        return sample_site_sampling_area_field(row, sample_site_areas, 'full_name')
+
+    def fractional_label(row):
+        return cover_label(row, species_lookup, species_lower_lookup)
+
+    def fractional_species_field(field_name):
+        return lambda row: cover_detail_value(row, species_lookup, species_lower_lookup, field_name)
+
+    common_metadata_items = [
+        ["Link, Context = dataset DOI <BERVO:8000391>", "10.15485/1618130"],
+        ["Location <BERVO:8000394>", "East River, CO"],
+        ["US state <BERVO:8000439>", "CO"],
+        ["Country <BERVO:8000398>", "USA"],
+        ["Campaign <BERVO:8000393>", "ER18"],
+    ]
+
+    sample_site_metadata_items = common_metadata_items + [
+        ["Date, Context = collection <BERVO:8000239>", date_range(sample_site_records, field_sampling_date)],
+        ["Position, Context = coordinate reference system <BERVO:8000443>", f"EPSG:{first_constant(sample_site_records, 'EPSG')}"],
+        ["Comment, Context = latitude longitude header correction <BERVO:8000305>", "Source columns named Longitude and Latitude contain latitude-like and longitude-like values respectively; exported columns are assigned by numeric range"],
+    ]
+
+    fractional_metadata_items = common_metadata_items + [
+        ["Date, Context = collection <BERVO:8000239>", date_range(fractional_records, fractional_collection_date)],
+        ["Comment, Context = lookup source <BERVO:8000305>", "SamplingArea codes resolved through sampling_area.csv; CoverCode values resolved through species_list.csv where possible"],
+    ]
+
+    rtk_metadata_items = common_metadata_items + [
+        ["Date, Context = collection <BERVO:8000239>", date_range(sample_site_records, field_sampling_date)],
+        ["Projected Coordinate System <BERVO:8000442>", f"EPSG:{first_constant(rtk_records, 'EPSG')} / UTM Zone 13N"],
+        ["Method, Context = GPS source <BERVO:8000303>", "RTK GPS"],
+    ]
+
+    sample_site_specs = [
+        make_spec('SampleSiteCode', 'Identifier, Context = sample site', 'BERVO:8000528', dimension_number=1, output_name='environmental_sample_site_identifier', original_description=desc('sample_site', 'SampleSiteCode')),
+        make_spec('Foliar_IGSN', 'Identifier, Context = foliar sample', 'BERVO:8000528', dimension_number=1, output_name='environmental_sample_foliar_igsn_identifier', original_description=desc('sample_site', 'Foliar_IGSN')),
+        make_spec('SamplingArea', 'Region, Context = city or sampling area', 'BERVO:8000519', dimension_number=2, transform=area_name, output_name='location_city_or_sampling_area_region', original_description=desc('sample_site', 'SamplingArea', 'Resolved from SamplingArea code using sampling_area.csv FullName.')),
+        make_spec('Longitude', 'Latitude', 'BERVO:8000395', dimension_number=2, unit='degree', spark_type='DoubleType', output_name='location_latitude_degree', original_description=desc('sample_site', 'Longitude', 'Source column is named Longitude, but values are latitude-like decimal degrees.')),
+        make_spec('Latitude', 'Longitude', 'BERVO:8000396', dimension_number=2, unit='degree', spark_type='DoubleType', output_name='location_longitude_degree', original_description=desc('sample_site', 'Latitude', 'Source column is named Latitude, but values are longitude-like decimal degrees.')),
+        make_spec('Elevation_m', 'Altitude', 'BERVO:8000099', dimension_number=2, unit='meter', spark_type='DoubleType', output_name='location_altitude_meter', original_description=desc('sample_site', 'Elevation_m')),
+        make_spec('GPS_source', 'Method, Context = GPS source', 'BERVO:8000303', dimension_number=2, output_name='location_gps_source_method', original_description=desc('sample_site', 'GPS_source')),
+        make_spec('VegetationType', 'Community type, Context = field vegetation', 'BERVO:8000404', dimension_number=2, output_name='location_field_vegetation_community_type', original_description=desc('sample_site', 'VegetationType')),
+        make_spec('Year', 'Date, Context = collection', 'BERVO:8000239', dimension_number=3, transform=field_sampling_date, output_name='time_collection_date', original_description='Derived from Month, Day, and Year source columns.'),
+        make_spec('FieldVegHeightMax_cm', 'Height, Context = maximum field vegetation', 'BERVO:8000076', unit='centimeter', spark_type='DoubleType', output_name='field_vegetation_height_max_centimeter', original_description=desc('sample_site', 'FieldVegHeightMax_cm')),
+        make_spec('FieldVegHeightMedian_cm', 'Height, Context = median field vegetation', 'BERVO:8000076', unit='centimeter', spark_type='DoubleType', output_name='field_vegetation_height_median_centimeter', original_description=desc('sample_site', 'FieldVegHeightMedian_cm')),
+        make_spec('SoilMoisture_%_1', 'Volumetric water content, Context = replicate 1', 'BERVO:0001743', unit='percent', spark_type='DoubleType', output_name='volumetric_water_content_replicate_1_percent', original_description=desc('sample_site', 'SoilMoisture_%_1')),
+        make_spec('SoilMoisture_%_2', 'Volumetric water content, Context = replicate 2', 'BERVO:0001743', unit='percent', spark_type='DoubleType', output_name='volumetric_water_content_replicate_2_percent', original_description=desc('sample_site', 'SoilMoisture_%_2')),
+        make_spec('SoilMoisture_%_3', 'Volumetric water content, Context = replicate 3', 'BERVO:0001743', unit='percent', spark_type='DoubleType', output_name='volumetric_water_content_replicate_3_percent', original_description=desc('sample_site', 'SoilMoisture_%_3')),
+    ]
+
+    fractional_cover_specs = [
+        make_spec('SampleSiteCode', 'Identifier, Context = sample site', 'BERVO:8000528', dimension_number=1, output_name='environmental_sample_site_identifier', original_description=desc('fractional_cover', 'SampleSiteCode')),
+        make_spec('SamplingArea', 'Region, Context = city or sampling area', 'BERVO:8000519', dimension_number=2, transform=area_name, output_name='location_city_or_sampling_area_region', original_description=desc('fractional_cover', 'SamplingArea', 'Resolved from SamplingArea code using sampling_area.csv FullName.')),
+        make_spec('CollectionDate', 'Date, Context = collection', 'BERVO:8000239', dimension_number=3, transform=fractional_collection_date, output_name='time_collection_date', original_description=desc('fractional_cover', 'CollectionDate')),
+        make_spec('CoverCode', 'Identifier, Context = cover code', 'BERVO:8000528', dimension_number=4, transform=fractional_species_field('source_cover_code'), output_name='taxon_cover_code_identifier', original_description=desc('fractional_cover', 'CoverCode')),
+        make_spec('CoverCode', 'Taxon, Context = family', 'BERVO:8000324', dimension_number=4, transform=fractional_species_field('family'), output_name='taxon_family', original_description='Derived from CoverCode or AltFieldCode using species_list.csv Family.'),
+        make_spec('CoverCode', 'Taxon, Context = genus', 'BERVO:8000324', dimension_number=4, transform=fractional_species_field('genus'), output_name='taxon_genus', original_description='Derived from CoverCode or AltFieldCode using species_list.csv Genus.'),
+        make_spec('CoverCode', 'Taxon, Context = species', 'BERVO:8000324', dimension_number=4, transform=fractional_species_field('species'), output_name='taxon_species', original_description='Derived from CoverCode or AltFieldCode using species_list.csv Species.'),
+        make_spec('CoverCode', 'Identifier, Context = alternate cover code', 'BERVO:8000528', dimension_number=4, transform=fractional_species_field('alt_field_code'), output_name='taxon_alternate_cover_code_identifier', original_description='Derived from CoverCode or AltFieldCode using species_list.csv AltFieldCode.'),
+        make_spec('CoverCode', 'Comment, Context = species list', 'BERVO:8000305', dimension_number=4, transform=fractional_species_field('notes'), output_name='taxon_species_list_comment', original_description='Derived from CoverCode or AltFieldCode using species_list.csv Notes.'),
+        make_spec('FractionalCover', 'Percent area covered by specified plant', 'BERVO:0001834', unit='percent', spark_type='DoubleType', output_name='percent_area_covered_by_specified_plant_percent', original_description=desc('fractional_cover', 'FractionalCover')),
+        make_spec('Note', 'Comment, Context = fractional cover', 'BERVO:8000305', transform=combined_fractional_note, output_name='fractional_cover_comment', original_description=desc('fractional_cover', 'Notes', 'Free-text note; includes one unlabeled source note column.')),
+    ]
+
+    rtk_specs = [
+        make_spec('SampleSiteCode', 'Identifier, Context = sample site', 'BERVO:8000528', dimension_number=1, output_name='environmental_sample_site_identifier', original_description=desc('raw_rtk_gps_points', 'SampleSiteCode')),
+        make_spec('SampleSiteCode', 'Region, Context = city or sampling area', 'BERVO:8000519', dimension_number=2, transform=rtk_area_name, output_name='location_city_or_sampling_area_region', original_description='Derived from SampleSiteCode using sample_site.csv and sampling_area.csv FullName.'),
+        make_spec('FieldPointName', 'Identifier, Context = field point', 'BERVO:8000528', dimension_number=2, output_name='location_field_point_identifier', original_description=desc('raw_rtk_gps_points', 'FieldPointName')),
+        make_spec('Northing', 'Northing, Projected Coordinate System = UTM Zone 13N', 'BERVO:8000441', dimension_number=2, unit='meter', spark_type='DoubleType', output_name='location_northing_projected_coordinate_system_utm_zone_13n_meter', original_description=desc('raw_rtk_gps_points', 'Northing', 'UTM northing coordinate in EPSG:26913.')),
+        make_spec('Easting', 'Easting, Projected Coordinate System = UTM Zone 13N', 'BERVO:8000440', dimension_number=2, unit='meter', spark_type='DoubleType', output_name='location_easting_projected_coordinate_system_utm_zone_13n_meter', original_description=desc('raw_rtk_gps_points', 'Easting', 'UTM easting coordinate in EPSG:26913.')),
+        make_spec('Elevation', 'Altitude', 'BERVO:8000099', dimension_number=2, unit='meter', spark_type='DoubleType', output_name='location_altitude_meter', original_description=desc('raw_rtk_gps_points', 'Elevation')),
+        make_spec('Code', 'Identifier, Context = field point class', 'BERVO:8000528', dimension_number=2, output_name='location_field_point_class_identifier', original_description=desc('raw_rtk_gps_points', 'Code')),
+    ]
+
+    field_mappings = {
+        ('sample_site', 'SamplingArea'): {'combination': 'Region, Context = city or sampling area; US state; Country', 'term': 'BERVO:8000519', 'data_type': 'string', 'notes': 'Resolved through sampling_area.csv FullName, State, and Country; raw area codes are not exported. Constant State and Country values are promoted to array-level metadata.'},
+        ('sample_site', 'Campaign'): {'combination': 'Campaign', 'term': 'BERVO:8000393', 'data_type': 'string'},
+        ('sample_site', 'SampleSiteCode'): {'combination': 'Identifier, Context = sample site', 'term': 'BERVO:8000528', 'data_type': 'string'},
+        ('sample_site', 'Month'): {'combination': 'Date, Context = collection', 'term': 'BERVO:8000239', 'data_type': 'integer', 'notes': 'Used only to derive ISO collection date.'},
+        ('sample_site', 'Day'): {'combination': 'Date, Context = collection', 'term': 'BERVO:8000239', 'data_type': 'integer', 'notes': 'Used only to derive ISO collection date.'},
+        ('sample_site', 'Year'): {'combination': 'Date, Context = collection', 'term': 'BERVO:8000239', 'data_type': 'integer', 'notes': 'Constant 2018; used in array metadata and derived ISO collection date.'},
+        ('sample_site', 'Longitude'): {'combination': 'Latitude', 'term': 'BERVO:8000395', 'unit': 'degree', 'data_type': 'float', 'notes': 'Source header appears swapped; values are latitude-like.'},
+        ('sample_site', 'Latitude'): {'combination': 'Longitude', 'term': 'BERVO:8000396', 'unit': 'degree', 'data_type': 'float', 'notes': 'Source header appears swapped; values are longitude-like.'},
+        ('sample_site', 'EPSG'): {'combination': 'Position, Context = coordinate reference system', 'term': 'BERVO:8000443', 'data_type': 'string', 'notes': 'Constant EPSG:4326 geographic coordinate reference system; stored as array-level metadata.'},
+        ('sample_site', 'GPS_source'): {'combination': 'Method, Context = GPS source', 'term': 'BERVO:8000303', 'data_type': 'string'},
+        ('sample_site', 'Elevation_m'): {'combination': 'Altitude', 'term': 'BERVO:8000099', 'unit': 'meter', 'data_type': 'float'},
+        ('sample_site', 'VegetationType'): {'combination': 'Community type, Context = field vegetation', 'term': 'BERVO:8000404', 'data_type': 'string'},
+        ('sample_site', 'FieldVegHeightMax_cm'): {'combination': 'Height, Context = maximum field vegetation', 'term': 'BERVO:8000076', 'unit': 'centimeter', 'data_type': 'float'},
+        ('sample_site', 'FieldVegHeightMedian_cm'): {'combination': 'Height, Context = median field vegetation', 'term': 'BERVO:8000076', 'unit': 'centimeter', 'data_type': 'float'},
+        ('sample_site', 'SoilMoisture_%_1'): {'combination': 'Volumetric water content, Context = replicate 1', 'term': 'BERVO:0001743', 'unit': 'percent', 'data_type': 'float'},
+        ('sample_site', 'SoilMoisture_%_2'): {'combination': 'Volumetric water content, Context = replicate 2', 'term': 'BERVO:0001743', 'unit': 'percent', 'data_type': 'float'},
+        ('sample_site', 'SoilMoisture_%_3'): {'combination': 'Volumetric water content, Context = replicate 3', 'term': 'BERVO:0001743', 'unit': 'percent', 'data_type': 'float'},
+        ('sample_site', 'Foliar_IGSN'): {'combination': 'Identifier, Context = foliar sample', 'term': 'BERVO:8000528', 'data_type': 'string'},
+        ('fractional_cover', 'SampleSiteCode'): {'combination': 'Identifier, Context = sample site', 'term': 'BERVO:8000528', 'data_type': 'string'},
+        ('fractional_cover', 'SamplingArea'): {'combination': 'Region, Context = city or sampling area; US state; Country', 'term': 'BERVO:8000519', 'data_type': 'string', 'notes': 'Resolved through sampling_area.csv FullName, State, and Country; raw area codes are not exported. Constant State and Country values are promoted to array-level metadata.'},
+        ('fractional_cover', 'CollectionDate'): {'combination': 'Date, Context = collection', 'term': 'BERVO:8000239', 'data_type': 'date', 'notes': 'Converted from M/D/YY to ISO date.'},
+        ('fractional_cover', 'CoverCode'): {'combination': 'Identifier, Context = cover code; Taxon, Context = family; Taxon, Context = genus; Taxon, Context = species; Identifier, Context = alternate cover code; Comment, Context = species list', 'term': 'BERVO:8000528', 'data_type': 'string', 'notes': 'Expanded through species_list.csv into cover code, family, genus, species, alternate field code, and species-list notes. RibMon and RubIda are inferred from obvious species-list entries.'},
+        ('fractional_cover', 'FractionalCover'): {'combination': 'Percent area covered by specified plant', 'term': 'BERVO:0001834', 'unit': 'percent', 'data_type': 'float'},
+        ('fractional_cover', 'Notes'): {'combination': 'Comment, Context = fractional cover', 'term': 'BERVO:8000305', 'data_type': 'string'},
+        ('raw_rtk_gps_points', 'SampleSiteCode'): {'combination': 'Identifier, Context = sample site', 'term': 'BERVO:8000528', 'data_type': 'string'},
+        ('raw_rtk_gps_points', 'FieldPointName'): {'combination': 'Identifier, Context = field point', 'term': 'BERVO:8000528', 'data_type': 'string'},
+        ('raw_rtk_gps_points', 'Northing'): {'combination': 'Northing, Projected Coordinate System = UTM Zone 13N', 'term': 'BERVO:8000441', 'unit': 'meter', 'data_type': 'float'},
+        ('raw_rtk_gps_points', 'Easting'): {'combination': 'Easting, Projected Coordinate System = UTM Zone 13N', 'term': 'BERVO:8000440', 'unit': 'meter', 'data_type': 'float'},
+        ('raw_rtk_gps_points', 'Elevation'): {'combination': 'Altitude', 'term': 'BERVO:8000099', 'unit': 'meter', 'data_type': 'float'},
+        ('raw_rtk_gps_points', 'Code'): {'combination': 'Identifier, Context = field point class', 'term': 'BERVO:8000528', 'data_type': 'string'},
+        ('raw_rtk_gps_points', 'EPSG'): {'combination': 'Projected Coordinate System', 'term': 'BERVO:8000442', 'data_type': 'string', 'notes': 'Constant; stored as array-level metadata.'},
+        ('sampling_area', 'SamplingArea'): {'combination': 'Identifier, Context = sampling area', 'term': 'BERVO:8000528', 'data_type': 'string'},
+        ('sampling_area', 'FullName'): {'combination': 'Region, Context = city or sampling area', 'term': 'BERVO:8000519', 'data_type': 'string'},
+        ('sampling_area', 'State'): {'combination': 'US state', 'term': 'BERVO:8000439', 'data_type': 'string', 'notes': 'Promoted to array-level metadata because all exported field-sampling rows resolve to CO.'},
+        ('sampling_area', 'Country'): {'combination': 'Country', 'term': 'BERVO:8000398', 'data_type': 'string', 'notes': 'Promoted to array-level metadata because all exported field-sampling rows resolve to USA.'},
+        ('species_list', 'CoverCode'): {'combination': 'Identifier, Context = cover code', 'term': 'BERVO:8000528', 'data_type': 'string'},
+        ('species_list', 'Family'): {'combination': 'Taxon, Context = family', 'term': 'BERVO:8000324', 'data_type': 'string'},
+        ('species_list', 'Genus'): {'combination': 'Taxon, Context = genus', 'term': 'BERVO:8000324', 'data_type': 'string'},
+        ('species_list', 'Species'): {'combination': 'Taxon, Context = species', 'term': 'BERVO:8000324', 'data_type': 'string'},
+        ('species_list', 'AltFieldCode'): {'combination': 'Identifier, Context = alternate cover code', 'term': 'BERVO:8000528', 'data_type': 'string'},
+        ('species_list', 'Notes'): {'combination': 'Comment, Context = species list', 'term': 'BERVO:8000305', 'data_type': 'string'},
+    }
+
+    status_overrides = {
+        ('sample_site', 'Campaign'): 'array_level_metadata',
+        ('sample_site', 'Month'): 'derived_into_collection_date',
+        ('sample_site', 'Day'): 'derived_into_collection_date',
+        ('sample_site', 'Year'): 'array_level_metadata_and_derived_into_collection_date',
+        ('sample_site', 'EPSG'): 'array_level_metadata',
+        ('raw_rtk_gps_points', 'EPSG'): 'array_level_metadata',
+        ('sampling_area', 'FullName'): 'lookup_only_projected_into_location_dimension',
+        ('sampling_area', 'State'): 'lookup_only_array_level_metadata',
+        ('sampling_area', 'Country'): 'lookup_only_array_level_metadata',
+        ('species_list', 'CoverCode'): 'lookup_only_projected_into_taxon_dimension',
+        ('species_list', 'Family'): 'lookup_only_projected_into_taxon_dimension',
+        ('species_list', 'Genus'): 'lookup_only_projected_into_taxon_dimension',
+        ('species_list', 'Species'): 'lookup_only_projected_into_taxon_dimension',
+        ('species_list', 'AltFieldCode'): 'lookup_only_projected_into_taxon_dimension',
+        ('species_list', 'Notes'): 'lookup_only_projected_into_taxon_dimension',
+    }
+    for key in field_mappings:
+        if key not in status_overrides and key[0] not in {'sampling_area', 'species_list'}:
+            status_overrides.setdefault(key, 'used_in_berdl_data_table')
+    status_overrides[('CRBU2018_AOP_Crowns.geojson', '')] = 'unused_spatial_polygon_not_imported'
+
+    sample_transforms = {
+        ('sample_site', 'SamplingArea'): area_name,
+        ('sample_site', 'Month'): field_sampling_date,
+        ('sample_site', 'Day'): field_sampling_date,
+        ('sample_site', 'Year'): field_sampling_date,
+        ('sample_site', 'Longitude'): lambda row: row.get('Longitude', ''),
+        ('sample_site', 'Latitude'): lambda row: row.get('Latitude', ''),
+        ('fractional_cover', 'SamplingArea'): area_name,
+        ('fractional_cover', 'CollectionDate'): fractional_collection_date,
+        ('fractional_cover', 'CoverCode'): fractional_label,
+        ('fractional_cover', 'Notes'): combined_fractional_note,
+    }
+
+    write_field_sampling_dd_bervo(
+        field_dir,
+        metadata_rows,
+        {
+            'sample_site': sample_site_records,
+            'fractional_cover': fractional_records,
+            'raw_rtk_gps_points': rtk_records,
+            'sampling_area': read_csv_records(field_dir / 'sampling_area.csv')[0],
+            'species_list': read_csv_records(field_dir / 'species_list.csv')[0],
+        },
+        field_mappings,
+        status_overrides,
+        sample_transforms,
+    )
+
+    write_generic_ontologized_table(
+        'field_sampling_sample_site',
+        sample_site_records,
+        sample_site_specs,
+        output_dir,
+        '2018 East River field-sampling site metadata, including resolved sampling area names, coordinates, vegetation type, vegetation height, and soil-moisture measurements',
+        sample_site_metadata_items,
+        'BERVO:8000342',
+        'Environmental sample',
+        dimensions=FIELD_SAMPLING_DIMENSIONS,
+    )
+    write_generic_ontologized_table(
+        'field_sampling_fractional_cover',
+        fractional_records,
+        fractional_cover_specs,
+        output_dir,
+        'Fractional cover observations from 2018 East River field sampling with sampling-area codes and cover codes resolved through lookup files',
+        fractional_metadata_items,
+        'BERVO:0001834',
+        'Percent area covered by specified plant',
+        dimensions=FIELD_SAMPLING_DIMENSIONS,
+    )
+    write_generic_ontologized_table(
+        'field_sampling_rtk_gps_points',
+        rtk_records,
+        rtk_specs,
+        output_dir,
+        'Raw RTK GPS plot-corner and field-point coordinates from 2018 East River field sampling, with sample-site area resolved through sample_site.csv',
+        rtk_metadata_items,
+        'BERVO:8000394',
+        'Location',
+        dimensions=FIELD_SAMPLING_DIMENSIONS,
+    )
 
 
 def derive_mag_manifest_records(soil_dir):
@@ -1564,13 +2135,13 @@ def convert_emi_dataset(base_dir, output_dir):
     # BERVO mappings for EMI fields
     emi_bervo_map = {
         'Northing': {
-            'combination': 'Northing, projected coordinate system = UTM Zone 13N',
+            'combination': 'Northing, Projected Coordinate System = UTM Zone 13N',
             'term': 'BERVO:8000441',
             'unit': 'm',
             'definition': 'UTM northing coordinate in WGS84 UTM Zone 13N',
         },
         'Easting': {
-            'combination': 'Easting, projected coordinate system = UTM Zone 13N',
+            'combination': 'Easting, Projected Coordinate System = UTM Zone 13N',
             'term': 'BERVO:8000440',
             'unit': 'm',
             'definition': 'UTM easting coordinate in WGS84 UTM Zone 13N',
@@ -1794,7 +2365,7 @@ def convert_emi_dataset(base_dir, output_dir):
                 ["Instrument", "CMD Mini-Explorer (GF Instruments)"],
                 ["Frequency", "30 kHz"],
                 ["Depths", "0.5m, 1.0m, 1.8m"],
-                ["Projected coordinate system", "UTM Zone 13N"]
+                ["Projected Coordinate System <BERVO:8000442>", "UTM Zone 13N"]
             ]),
             'BERVO:0000916',
             'Soil electrical conductivity',
@@ -1852,6 +2423,11 @@ def main():
     # Convert soil metagenome metadata and MAG archive manifest.
     print("Converting soil metagenome metadata...")
     convert_soil_metagenomes(base_dir, output_dir)
+    print()
+
+    # Convert 2018 field-sampling tabular data using lookup files as context.
+    print("Converting 2018 field sampling data...")
+    convert_field_sampling_2018(base_dir, output_dir)
     print()
 
     print("=" * 80)

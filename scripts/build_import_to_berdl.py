@@ -506,8 +506,11 @@ def main():
 
         schema_comments[stem] = parse_schema_with_comments(schema_py)
 
+    bervo_path = base_dir / 'ontologies' / 'bervo_github' / 'bervo.obo'
+    if not bervo_path.exists():
+        bervo_path = base_dir / 'ontologies' / 'bervo' / 'bervo.obo'
     ontology_paths = [
-        ('bervo', base_dir / 'ontologies' / 'bervo' / 'bervo.obo'),
+        ('bervo', bervo_path),
         ('uo', base_dir / 'ontologies' / 'uo' / 'uo.obo'),
     ]
     sys_oterm_count = write_sys_oterm_csv(sys_oterm_csv, ontology_paths)

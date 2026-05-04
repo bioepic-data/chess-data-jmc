@@ -12,8 +12,8 @@ Unit,unnecessary?,,N/A,Unit of column or row name within file.,text
 Definition,unnecessary?,,N/A,Definition of column or row name.,text
 Data_Type,unnecessary?,,N/A,Type of data that the column or row contains.,text
 SampleSiteCode,"Identifier, Context = Site",BERVO:8000528,N/A,A unique identification code associated with a surveyed plot.,text
-Easting,"Easting, projected coordinate system = UTM Zone 13N",BERVO:8000440,m,"Grid coordinates in the Universal Transverse Mercator system, measuring distances in meters from an origin within a specific 6-degree zone. Eastings count meters eastward.",numeric
-Northing,"Northing, projected coordinate system = UTM Zone 13N",BERVO:8000441,m,"Grid coordinates in the Universal Transverse Mercator system, measuring distances in meters from the central meridian of a UTM zone. Northings count meters northward from the equator.",numeric
+Easting,"Easting, Projected Coordinate System = UTM Zone 13N",BERVO:8000440,m,"Grid coordinates in the Universal Transverse Mercator system, measuring distances in meters from an origin within a specific 6-degree zone. Eastings count meters eastward.",numeric
+Northing,"Northing, Projected Coordinate System = UTM Zone 13N",BERVO:8000441,m,"Grid coordinates in the Universal Transverse Mercator system, measuring distances in meters from the central meridian of a UTM zone. Northings count meters northward from the equator.",numeric
 VegetationType,"Community type",BERVO:8000404,N/A,"Plot classification based on the dominan vegetation land-cover (e.g., meadow, shrub, or tree)",text
 Site,Region,BERVO:8000519,N/A,"A site is a small region of a domain defined by its topography. Several sites were identified based on elevation, aspect, and slope gradients. For each site, several plots were surveyed.",text
 Collection Date,"Date, Context=Collection",BERVO:8000239,YYYY-MM-DD,Date of data collection,date

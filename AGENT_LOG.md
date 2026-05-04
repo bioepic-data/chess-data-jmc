@@ -441,3 +441,78 @@ The sections above contain two types of information with different levels of acc
 - Verified fixed remote tables:
   - `ddt_ndarray`: 5 rows, `bad_metadata = 0`, `bad_type_id = 0`
   - `sys_ddt_typedef`: 50 rows, `bad_unit_id = 0`, `bad_dimension_id = 0`, `bad_variable_id = 0`
+
+### 2018 field-sampling ontologization pass
+
+- Treated `2018_field_sampling/metadata_column_key.csv` as the data dictionary for the dataset because no `dd.csv` is present.
+- Used `sampling_area.csv` and `species_list.csv` as lookup/context files only; they are not exported as BERDL tables or arrays.
+- Added three ontologized arrays:
+  - `field_sampling_sample_site`
+  - `field_sampling_fractional_cover`
+  - `field_sampling_rtk_gps_points`
+- Resolved `SamplingArea` codes to full sampling-area names in exported data and represented constant `CO`, `USA`, `ER18`, and EPSG values as array-level metadata where appropriate.
+- Resolved `CoverCode` values to species or cover-class labels using `species_list.csv`, including obvious one-off variants `RibMon`, `RubIda`, and lowercase `engelmann`.
+- Preserved partially missing values as empty fields and excluded fully empty source columns.
+- Corrected the apparent source-header swap where `sample_site.Longitude` contains latitude-like values and `sample_site.Latitude` contains longitude-like values; documented that in array metadata and typedef descriptions.
+- Regenerated `2018_field_sampling/dd_bervo.csv`, `ontologized_datasets/`, and `import_to_berdl/`.
+- Validated the regenerated import files:
+  - `ddt_ndarray.csv`: 8 rows, 15 columns
+  - `sys_ddt_typedef.csv`: 77 rows, 15 columns
+  - all generated CSV files parse with consistent row widths
+  - no raw sampling-area codes leaked into field-sampling data exports
+  - no placeholder null strings were found in field-sampling TSV/CSV outputs
+  - all numeric field-sampling variables have unit ontology terms
+
+### 2018 field-sampling lookup expansion
+
+- Expanded `sampling_area.csv` lookups into explicit location dimension variables instead of a single resolved site-name field:
+  - `location_city_or_sampling_area_region`
+  - `location_us_state`
+  - `location_country`
+- Expanded `fractional_cover.CoverCode` through `species_list.csv` into taxon dimension variables:
+  - source cover code
+  - family
+  - genus
+  - species
+  - alternate field code
+  - species-list notes
+- Removed the weak `Identifier = UTM Zone 13N` qualifier from RTK easting/northing comments; easting and northing are now typed directly as `Easting` and `Northing`.
+- Represented CRS/EPSG values as array-level `Position, Context = coordinate reference system` metadata and marked `Coordinate reference system` as a proposed BERVO term in `2018_field_sampling/dd_bervo.csv`, because no exact local BERVO coordinate-reference-system term was found.
+- Regenerated `ontologized_datasets/` and `import_to_berdl/` after these mapping changes.
+- Revalidated generated files:
+  - `field_sampling_sample_site`: 477 rows, 16 columns
+  - `field_sampling_fractional_cover`: 1,264 rows, 13 columns
+  - `field_sampling_rtk_gps_points`: 1,038 rows, 9 columns
+  - `sys_ddt_typedef.csv`: 88 rows, 15 columns
+  - no CSV row-width errors, raw sampling-area code leaks, placeholder null strings, or numeric field-sampling variables missing units
+
+### Projected Coordinate System BERVO update
+
+- Updated `ontologies/bervo_github/bervo.obo` so `BERVO:8000442` is named `Projected Coordinate System` instead of `State plane zone`.
+- Replaced the definition with a general projected-coordinate-system definition that covers UTM Zone 13N and State Plane zones.
+- Updated `scripts/build_import_to_berdl.py` so generated `sys_oterm.csv` prefers `ontologies/bervo_github/bervo.obo` when that checkout is present.
+- Remapped easting and northing qualifiers to use `Projected Coordinate System = UTM Zone 13N` in:
+  - `geophysical_survey/dd_bervo.csv`
+  - geophysical TDR generated typedefs
+  - geophysical EMI generated typedefs
+  - field-sampling RTK generated typedefs
+- Represented field-sampling RTK EPSG/UTM metadata as `Projected Coordinate System <BERVO:8000442>`.
+- Regenerated `ontologized_datasets/` and `import_to_berdl/`.
+- Verified generated `import_to_berdl/sys_oterm.csv` contains `BERVO:8000442` with name `Projected Coordinate System`.
+- Verified all easting/northing typedef comments now use `Projected Coordinate System = UTM Zone 13N`.
+
+### Constant variable promotion and BERVO commit
+
+- Committed the local `ontologies/bervo_github` ontology change:
+  - `eb2c977 Rename projected coordinate system term`
+- Updated `scripts/convert_to_ontologized.py` so generic ontologized-table generation promotes a spec to `ddt_ndarray_metadata` when every row has the same non-empty transformed value.
+- Moved field-sampling `CO` and `USA` out of data columns and into array-level metadata for all three field-sampling arrays.
+- Kept partially missing one-off values as data columns because they are not present on every row.
+- Regenerated `ontologized_datasets/` and `import_to_berdl/`.
+- Revalidated generated files:
+  - `field_sampling_sample_site`: 477 rows, 14 columns
+  - `field_sampling_fractional_cover`: 1,264 rows, 11 columns
+  - `field_sampling_rtk_gps_points`: 1,038 rows, 7 columns
+  - `sys_ddt_typedef.csv`: 82 rows, 15 columns
+  - no generated data tables have fully constant non-empty columns
+  - no CSV row-width errors, raw sampling-area code leaks, placeholder null strings, or numeric field-sampling variables missing units
