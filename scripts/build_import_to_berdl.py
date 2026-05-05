@@ -362,8 +362,8 @@ SYS_OTERM_COMMENTS = [
     },
     {
         'name': 'sys_oterm_synonyms',
-        'type': 'ARRAY<STRING>',
-        'comment': 'List of synonyms for a term',
+        'type': 'STRING',
+        'comment': 'JSON-encoded list of synonyms for a term',
     },
     {
         'name': 'sys_oterm_definition',
@@ -372,13 +372,13 @@ SYS_OTERM_COMMENTS = [
     },
     {
         'name': 'sys_oterm_links',
-        'type': 'ARRAY<STRING>',
-        'comment': 'Indicates that values are links to other tables (Ref) or ontological terms (ORef)',
+        'type': 'STRING',
+        'comment': 'JSON-encoded list of links to other tables (Ref) or ontological terms (ORef)',
     },
     {
         'name': 'sys_oterm_properties',
-        'type': 'MAP<STRING, STRING>',
-        'comment': 'Semicolon-separated map of ontology property values for each term',
+        'type': 'STRING',
+        'comment': 'JSON-encoded map of ontology property values for each term',
     },
 ]
 

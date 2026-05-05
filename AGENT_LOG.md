@@ -524,3 +524,31 @@ The sections above contain two types of information with different levels of acc
 - Regenerated `import_to_berdl/` and verified:
   - all generated CSV files parse with consistent row widths
   - `update_comments.py` now uses `bervodata_chess.*` for metadata rebuilds and comment updates
+
+### CHESS BERDL import rerun with field sampling
+
+- Pushed the BERVO ontology commit:
+  - `eb2c977 Rename projected coordinate system term`
+- Pushed CHESS repo commits:
+  - `9fd524d Update CHESS field sampling BERDL generation`
+  - `c9d1c73 Fix CHESS BERDL update namespace`
+- Reran BERDL overwrite ingest into namespace `bervodata_chess` using forced MinIO uploads and a fresh progress log.
+- Verified all 11 imported table row counts matched expected values:
+  - `ddt_ndarray`: 8
+  - `field_sampling_fractional_cover`: 1,264
+  - `field_sampling_rtk_gps_points`: 1,038
+  - `field_sampling_sample_site`: 477
+  - `geophysical_survey_emi_survey`: 186,909
+  - `geophysical_survey_tdr_plot_data`: 375
+  - `soil_metagenomes_mag_manifest`: 1,982
+  - `soil_metagenomes_nmdc_soil_properties`: 250
+  - `soil_metagenomes_sample_metadata`: 249
+  - `sys_ddt_typedef`: 82
+  - `sys_oterm`: 2,880
+- Fixed a post-ingest `sys_oterm` comment-update issue where generated SQL tried to alter JSON-encoded string fields to `ARRAY<STRING>` or `MAP<STRING, STRING>`.
+- Regenerated `import_to_berdl/` and reran the post-ingest metadata rebuild/comment script successfully.
+- Verified post-ingest metadata integrity checks:
+  - malformed `ddt_ndarray_metadata`: 0
+  - malformed `ddt_ndarray_type_sys_oterm_id`: 0
+  - malformed typedef unit, dimension, and variable term IDs: 0
+  - `BERVO:8000442` appears in `sys_oterm` as `Projected Coordinate System`
