@@ -516,3 +516,11 @@ The sections above contain two types of information with different levels of acc
   - `sys_ddt_typedef.csv`: 82 rows, 15 columns
   - no generated data tables have fully constant non-empty columns
   - no CSV row-width errors, raw sampling-area code leaks, placeholder null strings, or numeric field-sampling variables missing units
+
+### BERDL import namespace correction
+
+- Found that generated `import_to_berdl/update_comments.py` still targeted `chess.*` even though the established BERDL ingest namespace is `bervodata_chess`.
+- Updated `scripts/build_import_to_berdl.py` so regenerated post-ingest metadata rebuild and comment SQL targets `bervodata_chess.*`.
+- Regenerated `import_to_berdl/` and verified:
+  - all generated CSV files parse with consistent row widths
+  - `update_comments.py` now uses `bervodata_chess.*` for metadata rebuilds and comment updates

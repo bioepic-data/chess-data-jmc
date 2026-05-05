@@ -117,7 +117,7 @@ def csv_select_columns(schema):
     return ',\n'.join(select_parts)
 
 
-def metadata_rebuild_lines(database_name='chess',
+def metadata_rebuild_lines(database_name='bervodata_chess',
                            bucket_name='cdm-lake',
                            tenant_name='bervodata',
                            dataset_name='chess'):
@@ -177,7 +177,7 @@ def metadata_rebuild_lines(database_name='chess',
     return lines
 
 
-def generate_update_comments(output_dir, table_comments, schema_comments, database_name='chess'):
+def generate_update_comments(output_dir, table_comments, schema_comments, database_name='bervodata_chess'):
     script_path = output_dir / 'update_comments.py'
     lines = [
         '# Auto-generated script to update table and column comments.\n',
