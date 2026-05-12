@@ -552,3 +552,32 @@ The sections above contain two types of information with different levels of acc
   - malformed `ddt_ndarray_type_sys_oterm_id`: 0
   - malformed typedef unit, dimension, and variable term IDs: 0
   - `BERVO:8000442` appears in `sys_oterm` as `Projected Coordinate System`
+
+### CHESS BERDL import rerun with leaf area index
+
+- Reran BERDL overwrite ingest into namespace `bervodata_chess` after adding the LAI generated import files.
+- Used the refreshed BERIL ingest workflow from `/h/jmc/src/BERIL-research-observatory`, force-uploaded all 13 regenerated CSV files under `tenant-general-warehouse/bervodata/datasets/chess/`, and removed the prior `_ingest_progress.jsonl` so no previous table completions were skipped.
+- Verified all 13 imported table row counts matched expected values:
+  - `ddt_ndarray`: 10
+  - `field_sampling_fractional_cover`: 1,264
+  - `field_sampling_rtk_gps_points`: 1,038
+  - `field_sampling_sample_site`: 477
+  - `geophysical_survey_emi_survey`: 186,909
+  - `geophysical_survey_tdr_plot_data`: 375
+  - `leaf_area_index_site_metadata`: 665
+  - `leaf_area_index_summary`: 1,882
+  - `soil_metagenomes_mag_manifest`: 1,982
+  - `soil_metagenomes_nmdc_soil_properties`: 250
+  - `soil_metagenomes_sample_metadata`: 249
+  - `sys_ddt_typedef`: 136
+  - `sys_oterm`: 2,885
+- Ran generated `import_to_berdl/update_comments.py` successfully:
+  - rebuilt `ddt_ndarray` and `sys_ddt_typedef` from bronze CSVs using explicit CSV quote/escape handling
+  - applied table and column comments to all imported data tables and `sys_oterm`
+- Verified post-ingest metadata integrity checks:
+  - malformed `ddt_ndarray_metadata`: 0
+  - malformed `ddt_ndarray_type_sys_oterm_id`: 0
+  - malformed typedef unit, dimension, and variable term IDs: 0
+- Verified LAI spot checks:
+  - `RU` rows resolving to `Taylor River Road`: 72
+  - `PSME` rows resolving to `Pseudotsuga menziesii` with null GBIF taxon ID: 3

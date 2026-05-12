@@ -139,6 +139,8 @@ def map_unit_to_uo(unit_str):
         '%': 'UO:0000187',
         'percent': 'UO:0000187',
         'ph': 'UO:0000196',
+        'dimensionless': 'UO:0000186',
+        'dimensionless unit': 'UO:0000186',
         'milligram per kilogram': 'UO:0000308',
         'milligrams per kilogram': 'UO:0000308',
         'mg/kg': 'UO:0000308',
@@ -457,6 +459,14 @@ FIELD_SAMPLING_DIMENSIONS = {
     2: ('BERVO:8000394', 'Location', 'location'),
     3: ('BERVO:8000238', 'Time', 'time'),
     4: ('BERVO:8000324', 'Taxon', 'taxon'),
+}
+
+
+LAI_DIMENSIONS = {
+    1: ('BERVO:8000394', 'Location', 'location'),
+    2: ('BERVO:8000238', 'Time', 'time'),
+    3: ('BERVO:8000324', 'Taxon', 'taxon'),
+    4: ('BERVO:8000443', 'Position', 'position'),
 }
 
 
@@ -1374,6 +1384,299 @@ def sample_transformed_values(records, transform, limit=5):
         if len(values) >= limit:
             break
     return ' | '.join(values)
+
+
+LAI_SPECIES_LOOKUP = {
+    'ABLA': {
+        'family': 'Pinaceae',
+        'genus': 'Abies',
+        'species_epithet': 'lasiocarpa',
+        'binomial': 'Abies lasiocarpa',
+        'ncbi_taxon_id': '34340',
+        'gbif_taxon_id': '2685313',
+    },
+    'PICO': {
+        'family': 'Pinaceae',
+        'genus': 'Pinus',
+        'species_epithet': 'contorta',
+        'binomial': 'Pinus contorta',
+        'ncbi_taxon_id': '3339',
+        'gbif_taxon_id': '5285750',
+    },
+    'PIEN': {
+        'family': 'Pinaceae',
+        'genus': 'Picea',
+        'species_epithet': 'engelmannii',
+        'binomial': 'Picea engelmannii',
+        'ncbi_taxon_id': '3334',
+        'gbif_taxon_id': '5284917',
+    },
+    'POTR': {
+        'family': 'Salicaceae',
+        'genus': 'Populus',
+        'species_epithet': 'tremuloides',
+        'binomial': 'Populus tremuloides',
+        'ncbi_taxon_id': '3693',
+        'gbif_taxon_id': '3040215',
+    },
+    'PSME': {
+        'family': 'Pinaceae',
+        'genus': 'Pseudotsuga',
+        'species_epithet': 'menziesii',
+        'binomial': 'Pseudotsuga menziesii',
+        'ncbi_taxon_id': '3357',
+        'gbif_taxon_id': '',
+    },
+}
+
+
+def load_lai_dd_bervo_rows(lai_dir):
+    with (lai_dir / 'dd_bervo.csv').open('r', encoding='utf-8-sig', newline='') as f:
+        return {row['column_or_row_name']: row for row in csv.DictReader(f)}
+
+
+def lai_unit_for_spec(row):
+    unit = clean_text(normalize_missing_value(row.get('unit', '')))
+    return '' if unit == 'YYYY-MM-DD' else unit
+
+
+def make_lai_spec(dd_rows, row_name, *, source=None, dimension_number='',
+                  transform=None, output_name=None, spark_type=None,
+                  original_description=None):
+    row = dd_rows[row_name]
+    if spark_type is None:
+        spark_type = 'DoubleType' if row.get('data_type') == 'numeric' else 'StringType'
+    return make_spec(
+        source or row_name,
+        row['BERVO Combination'],
+        row['BERVO Term'],
+        dimension_number=dimension_number,
+        unit=lai_unit_for_spec(row),
+        spark_type=spark_type,
+        transform=transform,
+        output_name=output_name,
+        original_description=original_description or row.get('definition', ''),
+    )
+
+
+def parse_lai_sampling_area_label(label):
+    label = clean_text(normalize_missing_value(label))
+    if not label:
+        return '', ''
+    if label == 'Ad Hoc Site':
+        return label, label
+    match = re.match(r'^[^:]+:\s*(.*?)\s*\(([^)]+)\)\s*$', label)
+    if not match:
+        return '', label
+    full_name = clean_text(match.group(1))
+    code = clean_text(match.group(2))
+    if code == 'RU':
+        full_name = 'Taylor River Road'
+    return code, full_name
+
+
+def load_lai_sampling_area_lookup(base_dir):
+    lookup = {
+        'AU': 'Ancillary aspen understory',
+        'Ad Hoc Site': 'Ad Hoc Site',
+    }
+    veg_dir = base_dir / 'vegetation_attributes_photos'
+    for file_name in (
+        'chess_tree_site_cleaned.csv',
+        'chess_shrub_site_cleaned.csv',
+        'chess_meadow_site_cleaned.csv',
+    ):
+        path = veg_dir / file_name
+        if not path.exists():
+            continue
+        records, _ = read_csv_records(path)
+        for record in records:
+            code, full_name = parse_lai_sampling_area_label(record.get('Sampling_Area', ''))
+            if not code or not full_name:
+                continue
+            if code == 'RU':
+                lookup[code] = 'Taylor River Road'
+            else:
+                lookup.setdefault(code, full_name)
+    return lookup
+
+
+def lai_sampling_area_full_name(row, sampling_area_lookup):
+    code = clean_text(normalize_missing_value(row.get('Sampling_Area', '')))
+    if not code:
+        return ''
+    return sampling_area_lookup.get(code, code)
+
+
+def lai_species_code(row):
+    return clean_text(normalize_missing_value(row.get('Focal_Tree_Species', '')))
+
+
+def lai_species_lookup_value(row, field_name):
+    code = lai_species_code(row)
+    if not code:
+        return ''
+    return LAI_SPECIES_LOOKUP.get(code, {}).get(field_name, '')
+
+
+def lai_site_key(row):
+    return (
+        clean_text(normalize_missing_value(row.get('Site_Number', ''))),
+        clean_text(normalize_missing_value(row.get('Location_Type', ''))),
+        clean_text(normalize_missing_value(row.get('Sampling_Area', ''))),
+    )
+
+
+def load_lai_metadata_records(lai_dir):
+    records = []
+    for prefix in ('au', 'meadow', 'shrub', 'tree'):
+        file_name = f'lai_{prefix}_metadata_cleaned.csv'
+        file_records, _ = read_csv_records(lai_dir / file_name)
+        for record in file_records:
+            row = dict(record)
+            row['__source_file'] = file_name
+            records.append(row)
+    return records
+
+
+def load_lai_summary_records(lai_dir, metadata_records):
+    metadata_by_key = {lai_site_key(record): record for record in metadata_records}
+    records = []
+    for prefix in ('au', 'meadow', 'shrub', 'tree'):
+        file_name = f'lai_{prefix}_summary_data_cleaned.csv'
+        file_records, _ = read_csv_records(lai_dir / file_name)
+        for record in file_records:
+            merged = dict(metadata_by_key.get(lai_site_key(record), {}))
+            merged.update(record)
+            merged['__source_file'] = file_name
+            records.append(merged)
+    return records
+
+
+def lai_date_value(row):
+    return clean_text(normalize_missing_value(row.get('Collection_Date', '')))
+
+
+def convert_leaf_area_index(base_dir, output_dir):
+    """Convert CHESS 2025 LAI metadata and summary observations."""
+    lai_dir = base_dir / 'leaf_area_index'
+    dd_rows = load_lai_dd_bervo_rows(lai_dir)
+    sampling_area_lookup = load_lai_sampling_area_lookup(base_dir)
+    site_records = load_lai_metadata_records(lai_dir)
+    summary_records = load_lai_summary_records(lai_dir, site_records)
+
+    def area_name(row):
+        return lai_sampling_area_full_name(row, sampling_area_lookup)
+
+    def species_field(field_name):
+        return lambda row: lai_species_lookup_value(row, field_name)
+
+    common_metadata_items = [
+        ["Link, Context = dataset DOI <BERVO:8000391>", "10.15485/3022242"],
+        ["US state <BERVO:8000439>", "CO"],
+        ["Country <BERVO:8000398>", "USA"],
+        ["Campaign <BERVO:8000393>", "CHESS 2025"],
+        ["Comment, Context = excluded source files <BERVO:8000305>", "spot_checks.csv, raw_lai_2200C.zip, intermediate_results.zip, and scattering_correction_logs.zip are not included in this import"],
+    ]
+    site_metadata_items = common_metadata_items + [
+        ["Date, Context = collection <BERVO:8000239>", date_range(site_records, lai_date_value)],
+        ["Comment, Context = lookup source <BERVO:8000305>", "Sampling_Area codes resolved from vegetation_attributes_photos site metadata where available; RU is mapped to Taylor River Road; focal-tree USDA-style codes are expanded through local taxonomy lookup metadata"],
+    ]
+    summary_metadata_items = common_metadata_items + [
+        ["Date, Context = collection <BERVO:8000239>", date_range(summary_records, lai_date_value)],
+        ["Comment, Context = source table join <BERVO:8000305>", "LAI summary rows are joined to LAI site metadata by Site_Number, Location_Type, and Sampling_Area to add collection date and focal-tree metadata"],
+    ]
+
+    location_specs = [
+        make_lai_spec(dd_rows, 'Site_Number', dimension_number=1, output_name='location_measurement_site_identifier'),
+        make_lai_spec(dd_rows, 'Location_Type', dimension_number=1, output_name='location_land_cover_community_type'),
+        make_lai_spec(dd_rows, 'Sampling_Area', dimension_number=1, output_name='location_sampling_area_region_code'),
+        make_lai_spec(dd_rows, 'Sampling_Area_Full_Name', source='Sampling_Area', dimension_number=1, transform=area_name, output_name='location_resolved_sampling_area_region'),
+    ]
+    spatial_specs = [
+        make_lai_spec(dd_rows, 'Latitude', dimension_number=1, output_name='location_latitude_degree'),
+        make_lai_spec(dd_rows, 'Longitude', dimension_number=1, output_name='location_longitude_degree'),
+    ]
+    time_specs = [
+        make_lai_spec(dd_rows, 'Collection_Date', dimension_number=2, output_name='time_collection_date'),
+    ]
+    taxon_specs = [
+        make_lai_spec(dd_rows, 'Focal_Tree_Species', dimension_number=3, transform=lai_species_code, output_name='taxon_focal_tree_usda_plants_code'),
+        make_lai_spec(dd_rows, 'Focal_Tree_Taxon_Family', source='Focal_Tree_Species', dimension_number=3, transform=species_field('family'), output_name='taxon_focal_tree_family'),
+        make_lai_spec(dd_rows, 'Focal_Tree_Taxon_Genus', source='Focal_Tree_Species', dimension_number=3, transform=species_field('genus'), output_name='taxon_focal_tree_genus'),
+        make_lai_spec(dd_rows, 'Focal_Tree_Taxon_Species_Epithet', source='Focal_Tree_Species', dimension_number=3, transform=species_field('species_epithet'), output_name='taxon_focal_tree_species_epithet'),
+        make_lai_spec(dd_rows, 'Focal_Tree_Taxon_Binomial', source='Focal_Tree_Species', dimension_number=3, transform=species_field('binomial'), output_name='taxon_focal_tree_binomial'),
+        make_lai_spec(dd_rows, 'Focal_Tree_NCBI_Taxon_ID', source='Focal_Tree_Species', dimension_number=3, transform=species_field('ncbi_taxon_id'), output_name='taxon_focal_tree_ncbi_taxon_identifier'),
+        make_lai_spec(dd_rows, 'Focal_Tree_GBIF_Taxon_ID', source='Focal_Tree_Species', dimension_number=3, transform=species_field('gbif_taxon_id'), output_name='taxon_focal_tree_gbif_taxon_identifier'),
+    ]
+    site_metadata_specs = (
+        location_specs
+        + spatial_specs
+        + time_specs
+        + taxon_specs
+        + [
+            make_lai_spec(dd_rows, 'Light_Conditions', output_name='sky_and_illumination_conditions_description'),
+            make_lai_spec(dd_rows, 'Requires_K', output_name='scattering_correction_required_binary'),
+            make_lai_spec(dd_rows, 'Associated_K', output_name='associated_scattering_correction_record_identifier'),
+            make_lai_spec(dd_rows, 'Contains_K', output_name='scattering_correction_record_collected_at_site_binary'),
+            make_lai_spec(dd_rows, 'K_Record_Azimuth', output_name='scattering_correction_sensor_cap_azimuth_degree', spark_type='StringType'),
+            make_lai_spec(dd_rows, 'Asky_FOV', output_name='a_b_record_sensor_cap_field_of_view_angle_degree'),
+            make_lai_spec(dd_rows, 'Widesky_FOV', output_name='wide_sky_reference_field_of_view_angle_degree'),
+            make_lai_spec(dd_rows, 'Notes', output_name='measurement_notes_comment'),
+            make_lai_spec(dd_rows, 'QC_Flag', output_name='leaf_area_index_quality_control_flag'),
+            make_lai_spec(dd_rows, 'Plot_Contains_Focal_Tree', output_name='plot_contains_focal_tree_binary'),
+            make_lai_spec(dd_rows, 'A_Record', output_name='licor_above_canopy_reference_record_identifier'),
+            make_lai_spec(dd_rows, 'B_Record', output_name='licor_below_canopy_record_identifier'),
+            make_lai_spec(dd_rows, 'K_Record', output_name='licor_scattering_correction_record_identifier'),
+            make_lai_spec(dd_rows, 'A_Record_Azimuth', output_name='a_b_record_sensor_orientation_azimuth_degree'),
+        ]
+    )
+    summary_specs = (
+        location_specs
+        + time_specs
+        + taxon_specs
+        + [
+            make_lai_spec(dd_rows, 'Corner', dimension_number=4, output_name='position_plot_corner_index'),
+            make_lai_spec(dd_rows, 'L_2200', output_name='leaf_area_index_licor_2200_dimensionless_unit'),
+            make_lai_spec(dd_rows, 'Le_2200', output_name='effective_leaf_area_index_licor_2200_dimensionless_unit'),
+            make_lai_spec(dd_rows, 'SEL_2200', output_name='leaf_area_index_standard_error_licor_2200_dimensionless_unit'),
+            make_lai_spec(dd_rows, 'ACF_2200', output_name='apparent_clumping_factor_licor_2200_dimensionless_unit'),
+            make_lai_spec(dd_rows, 'L_WN', output_name='leaf_area_index_welles_norman_dimensionless_unit'),
+            make_lai_spec(dd_rows, 'Le_WN', output_name='effective_leaf_area_index_welles_norman_dimensionless_unit'),
+            make_lai_spec(dd_rows, 'SEL_WN', output_name='leaf_area_index_standard_error_welles_norman_dimensionless_unit'),
+            make_lai_spec(dd_rows, 'ACF_WN', output_name='apparent_clumping_factor_welles_norman_dimensionless_unit'),
+            make_lai_spec(dd_rows, 'L_LANG', output_name='leaf_area_index_lang_dimensionless_unit'),
+            make_lai_spec(dd_rows, 'SEL_LANG', output_name='leaf_area_index_standard_error_lang_dimensionless_unit'),
+            make_lai_spec(dd_rows, 'L_ELLIP', output_name='leaf_area_index_ellipsoidal_intermediate_dimensionless_unit'),
+            make_lai_spec(dd_rows, 'L_SCATCOR', output_name='leaf_area_index_scatter_corrected_dimensionless_unit'),
+            make_lai_spec(dd_rows, 'S_SCATCOR', output_name='scattering_correction_factor_dimensionless_unit'),
+            make_lai_spec(dd_rows, 'ACF_SCATCOR', output_name='apparent_clumping_factor_scatter_corrected_dimensionless_unit'),
+            make_lai_spec(dd_rows, 'CHI_SCATCOR', output_name='leaf_angle_distribution_chi_algorithm_parameter_dimensionless_unit'),
+        ]
+    )
+
+    write_generic_ontologized_table(
+        'leaf_area_index_site_metadata',
+        site_records,
+        site_metadata_specs,
+        output_dir,
+        'CHESS 2025 LAI site-level metadata for meadow, shrub, tree, and ancillary aspen understory measurements with sampling-area and focal-tree code expansions',
+        site_metadata_items,
+        'BERVO:8000394',
+        'Location',
+        dimensions=LAI_DIMENSIONS,
+    )
+    write_generic_ontologized_table(
+        'leaf_area_index_summary',
+        summary_records,
+        summary_specs,
+        output_dir,
+        'CHESS 2025 leaf area index summary observations from meadow, shrub, tree, and ancillary aspen understory measurements',
+        summary_metadata_items,
+        'BERVO:8000164',
+        'Leaf area index',
+        dimensions=LAI_DIMENSIONS,
+    )
 
 
 def write_field_sampling_dd_bervo(field_dir, metadata_rows, source_tables,
@@ -2428,6 +2731,11 @@ def main():
     # Convert 2018 field-sampling tabular data using lookup files as context.
     print("Converting 2018 field sampling data...")
     convert_field_sampling_2018(base_dir, output_dir)
+    print()
+
+    # Convert CHESS 2025 LAI metadata and summary observations.
+    print("Converting leaf area index data...")
+    convert_leaf_area_index(base_dir, output_dir)
     print()
 
     print("=" * 80)
